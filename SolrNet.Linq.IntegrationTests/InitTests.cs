@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace SolrNet.Linq.IntegrationTests
@@ -11,6 +14,6 @@ namespace SolrNet.Linq.IntegrationTests
             SolrQueryResults<Product> result = Product.SolrOperations.Value.Query("*:*");
 
             Assert.True(result.Count > 0);
-        }
+        }        
     }
 }
