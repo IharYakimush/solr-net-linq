@@ -27,33 +27,16 @@ namespace SolrNet.Linq
         {
             this.Visit(node.Arguments[0]);
 
-            Type declaringType = node.Method.DeclaringType;
-            string methodName = node.Method.Name;
-
-            if (declaringType == typeof(Queryable) && methodName == TakeMethod.Name)
+            bool result = node.TryVisitTake(this.Options);
+            result |= node.TryVisitSkip(this.Options);
+            result |= node.TryVisitSorting(this.Options);
+            
+            if (!result && !(node.Method.DeclaringType == typeof(Queryable) && node.Method.Name == nameof(Queryable.OfType)))
             {
-                TakeMethod.Visit(node, this.Options);
-            }
-            else if (declaringType == typeof(Queryable) && methodName == SkipMethod.Name)
-            {
-                SkipMethod.Visit(node, this.Options);
-            }
-            else if (!(declaringType == typeof(Queryable) && methodName == nameof(Queryable.OfType)))
-            {
-                throw new InvalidOperationException($"Method '{methodName}' not supported.");
+                throw new InvalidOperationException($"Method '{node.Method.Name}' not supported.");
             }
 
             return node;
-        }
-
-        private static Expression StripQuotes(Expression expression)
-        {
-            while (expression.NodeType == ExpressionType.Quote)
-            {
-                expression = ((UnaryExpression)expression).Operand;
-            }
-
-            return expression;
-        }
+        }        
     }
 }

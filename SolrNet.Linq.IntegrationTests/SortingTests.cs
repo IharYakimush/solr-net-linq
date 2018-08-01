@@ -1,0 +1,49 @@
+﻿using System;
+using System.Linq;
+using Xunit;
+
+namespace SolrNet.Linq.IntegrationTests
+{
+    public class SortingTests
+    {
+        [Fact]
+        public void ByProperty()
+        {
+            var asc = Product.SolrOperations.Value.AsQuerable().OrderBy(p => p.Price).ThenBy(p => p.Id).ToList();
+            var desc = Product.SolrOperations.Value.AsQuerable().OrderByDescending(p => p.Price).ThenByDescending(p => p.Id).ToList();
+
+            Assert.Equal(asc.First().Id, desc.Last().Id);
+            Assert.Equal(desc.First().Id, asc.Last().Id);
+        }
+
+        [Fact]
+        public void DoubleOrders()
+        {
+            Assert.Throws<InvalidOperationException>(() =>
+                Product.SolrOperations.Value.AsQuerable().OrderBy(p => p.Price).OrderBy(p => p.Id).ToList());
+        }
+
+        [Fact]
+        public void ByNotMapped()
+        {
+            Assert.Throws<InvalidOperationException>(() =>
+                Product.SolrOperations.Value.AsQuerable().OrderBy(p => p.NotMapped).ToList());
+        }
+
+        [Fact]
+        public void ByConversion()
+        {
+            var result = Product.SolrOperations.Value.AsQuerable().OrderBy(p => (int)p.Price).ToList();
+            
+            Assert.True(result.Any());
+        }
+
+        [Fact]
+        public void ByNullable()
+        {
+            var result = Product.SolrOperations.Value.AsQuerable().OrderBy(p => p.Popularity).ToList();
+
+            Assert.True(result.Any());
+        }
+    }
+}
