@@ -1,14 +1,23 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using SolrNet.Commands.Parameters;
 
 namespace SolrNet.Linq
 {
     public static class SolrOperationsExtensions
     {
-        public static SolrQuery<T> AsQuerable<T>(this ISolrBasicReadOnlyOperations<T> operations)
+        public static SolrQuery<T> AsQuerable<T>(this ISolrBasicReadOnlyOperations<T> operations, Action<QueryOptions> options = null, ISolrQuery solrQuery = null)
         {
-            return new SolrQuery<T>(new SolrQueryProvider<T>(operations));
+            QueryOptions o = new QueryOptions();
+            options?.Invoke(o);
+            return new SolrQuery<T>(new SolrQueryProvider<T>(operations, o, solrQuery));
+        }
+
+        public static SolrQuery<T> AsQuerable<T>(this ISolrBasicReadOnlyOperations<T> operations, ISolrQuery solrQuery)
+        {
+            return operations.AsQuerable(null, solrQuery);
         }
 
         public static SolrQueryResults<T> ToSolrQueryResults<T>(this IQueryable<T> queryable)
