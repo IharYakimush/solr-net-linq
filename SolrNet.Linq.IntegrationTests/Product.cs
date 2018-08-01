@@ -26,6 +26,9 @@ namespace SolrNet.Linq.IntegrationTests
         [SolrField("price")]
         public decimal Price { get; set; }
 
+        [SolrField("sequence_i")]
+        public int Sequence { get; set; }
+
         [SolrField("popularity")]
         public decimal? Popularity { get; set; }
 

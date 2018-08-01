@@ -45,5 +45,13 @@ namespace SolrNet.Linq.IntegrationTests
 
             Assert.True(result.Any());
         }
+
+        [Fact]
+        public void ByDiv()
+        {
+            var result = Product.SolrOperations.Value.AsQuerable().OrderBy(p => p.Sequence / 10).ToList();
+
+            Assert.True(result.Any());
+        }
     }
 }

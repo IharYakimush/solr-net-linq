@@ -51,19 +51,8 @@ namespace SolrNet.Linq.Expressions
                     }
                 }
 
-                //MemberExpression lambdaExp = this.Visit(orderingMember) as MemberExpression;
-                if (orderingMember is MemberExpression lambdaExp)
-                {
-                    MemberInfo memberInfo = lambdaExp.Member;
-
-                    string solrName = memberInfo.GetMemberSolrName();
-
-                    options.OrderBy.Add(new SortOrder(solrName, order));
-                }
-                else
-                {
-                    throw new InvalidOperationException($"Unable to apply {node.Method.Name}");
-                }
+                string solrExpression = orderingMember.GetSolrExpression();
+                options.OrderBy.Add(new SortOrder(solrExpression, order));
             }
         }                
     }
