@@ -53,5 +53,13 @@ namespace SolrNet.Linq.IntegrationTests
 
             Assert.True(result.Any());
         }
+
+        [Fact]
+        public void ByAbs()
+        {
+            var result = Product.SolrOperations.Value.AsQuerable().OrderBy(p => Math.Abs(p.Sequence)).ToList();
+
+            Assert.True(result.Any());
+        }
     }
 }

@@ -43,15 +43,7 @@ namespace SolrNet.Linq.Expressions
                 LambdaExpression lambda = (LambdaExpression)node.Arguments[1].StripQuotes();
                 Expression orderingMember = lambda.Body;
 
-                if (orderingMember.NodeType == ExpressionType.Convert)
-                {
-                    if (orderingMember is UnaryExpression orderingMemberConvert)
-                    {
-                        orderingMember = orderingMemberConvert.Operand;
-                    }
-                }
-
-                string solrExpression = orderingMember.GetSolrExpression();
+                string solrExpression = orderingMember.GetSolrMemberProduct();
                 options.OrderBy.Add(new SortOrder(solrExpression, order));
             }
         }                
