@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2042
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolrNet.Linq", "SolrNet.Linq\SolrNet.Linq.csproj", "{5F68EDAF-6074-47A7-A58E-29CCDFD6A4DF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolrNet.Linq.IntegrationTests", "SolrNet.Linq.IntegrationTests\SolrNet.Linq.IntegrationTests.csproj", "{7CDE1820-6BE1-4D9D-863C-5FC77C145D69}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{20E30BDD-7AA1-4C19-9A6D-82AFA956A459}"
+	ProjectSection(SolutionItems) = preProject
+		docker-compose.yml = docker-compose.yml
+		localenv.ps1 = localenv.ps1
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5F68EDAF-6074-47A7-A58E-29CCDFD6A4DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F68EDAF-6074-47A7-A58E-29CCDFD6A4DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F68EDAF-6074-47A7-A58E-29CCDFD6A4DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F68EDAF-6074-47A7-A58E-29CCDFD6A4DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7CDE1820-6BE1-4D9D-863C-5FC77C145D69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CDE1820-6BE1-4D9D-863C-5FC77C145D69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CDE1820-6BE1-4D9D-863C-5FC77C145D69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CDE1820-6BE1-4D9D-863C-5FC77C145D69}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4022C735-AFA7-4E1E-9D6E-68646C01000F}
+	EndGlobalSection
+EndGlobal
