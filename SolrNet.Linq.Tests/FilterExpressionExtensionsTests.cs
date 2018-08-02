@@ -94,13 +94,31 @@ namespace SolrNet.Linq.Tests
             Assert.Equal("price:[12 TO *]", _serializer.Serialize(query));
         }
 
+        //[Fact]
+        //public void CompareMethod()
+        //{
+        //    Expression<Func<Product, bool>> exp = (Product p) => p.Id.CompareTo("qwe") > 0;
+        //    ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+        //    Assert.Equal("inStock_b:(true)", _serializer.Serialize(query));
+        //}
+
         [Fact]
-        public void CompareMethod()
+        public void NotEqualValue()
         {
-            Expression<Func<Product, bool>> exp = (Product p) => p.Id.CompareTo("qwe") > 0;
+            Expression<Func<Product, bool>> exp = (Product p) => p.Id != "qwe";
             ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
 
-            Assert.Equal("inStock_b:(true)", _serializer.Serialize(query));
+            Assert.Equal("(*:* NOT id:(qwe))", _serializer.Serialize(query));
+        }
+
+        [Fact]
+        public void NotEqualNull()
+        {
+            Expression<Func<Product, bool>> exp = (Product p) => p.Id != null;
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("id:[* TO *]", _serializer.Serialize(query));
         }
     }
 }

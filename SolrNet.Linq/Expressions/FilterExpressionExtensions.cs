@@ -42,7 +42,7 @@ namespace SolrNet.Linq.Expressions
 
                         return kvp.Value == null
                             ? new SolrHasValueQuery(kvp.Key)
-                            : CreateNotSolrQuery(new SolrQueryByField(kvp.Key, kvp.Key.SerializeToSolrDefault()));
+                            : CreateNotSolrQuery(new SolrQueryByField(kvp.Key, kvp.Value));
 
                     }
 

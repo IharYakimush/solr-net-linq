@@ -47,11 +47,6 @@ namespace SolrNet.Linq.Expressions
             });
         }
 
-        internal static string SerializeToSolrDefault(this object value)
-        {
-            return DefaultFieldSerializer.Serialize(value).First().FieldValue;
-        }
-
         public static string GetSolrMemberProduct(this Expression exp, Type type, bool disableFunctions = false)
         {
             try
