@@ -35,13 +35,24 @@ namespace SolrNet.Linq.Expressions
                         return new SolrMultipleCriteriaQuery(queries, op);
                     }
 
+                    case ExpressionType.NotEqual:
+                    {
+                        Tuple<MemberExpression, Expression, bool> memberToLeft = binaryExpression.MemberToLeft(type);
+                        KeyValuePair<string, string> kvp = memberToLeft.MemberValue(type);
+
+                        return kvp.Value == null
+                            ? new SolrHasValueQuery(kvp.Key)
+                            : CreateNotSolrQuery(new SolrQueryByField(kvp.Key, kvp.Key.SerializeToSolrDefault()));
+
+                    }
+
                     case ExpressionType.GreaterThan:
                     case ExpressionType.GreaterThanOrEqual:
                     case ExpressionType.LessThan:
                     case ExpressionType.LessThanOrEqual:
                     {
                         Tuple<MemberExpression, Expression, bool> memberToLeft = binaryExpression.MemberToLeft(type);
-                        KeyValuePair<string, object> kvp = memberToLeft.MemberValue(type);
+                        KeyValuePair<string, string> kvp = memberToLeft.MemberValue(type);
                         string from = null;
                         string to = null;
                         bool directGreater = (nodeType == ExpressionType.GreaterThan ||
@@ -54,11 +65,11 @@ namespace SolrNet.Linq.Expressions
 
                         if (directGreater || reverseGreater)
                         {
-                            from = kvp.Value.SerializeToSolrDefault();
+                            from = kvp.Value;
                         }
                         else
                         {
-                            to = kvp.Value.SerializeToSolrDefault();
+                            to = kvp.Value;
                         }
 
                         bool inc = nodeType == ExpressionType.GreaterThanOrEqual ||
@@ -163,21 +174,21 @@ namespace SolrNet.Linq.Expressions
                 $"Access to member of type '{type}' not found in both '{a}' and '{b}'.");
         }
 
-        public static KeyValuePair<string, object> MemberValue(this Tuple<MemberExpression, Expression, bool> member, Type type)
+        public static KeyValuePair<string, string> MemberValue(this Tuple<MemberExpression, Expression, bool> member, Type type)
         {
-            string key = member.Item1.GetSolrMemberProduct(type);
-            object dynamicInvoke;
+            string key = member.Item1.GetSolrMemberProduct(type, true);
+            string dynamicInvoke;
 
             try
             {
-                dynamicInvoke = Expression.Lambda(member.Item2).Compile().DynamicInvoke();
+                dynamicInvoke = member.Item2.GetSolrMemberProduct(type, true);
             }
             catch (Exception e)
             {
                 throw new InvalidOperationException($"Unable to resolve value for {member.Item1}", e);
             }
             
-            return new KeyValuePair<string, object>(key, dynamicInvoke);
+            return new KeyValuePair<string, string>(key, dynamicInvoke);
         }
     }
 }

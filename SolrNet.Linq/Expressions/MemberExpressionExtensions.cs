@@ -52,7 +52,7 @@ namespace SolrNet.Linq.Expressions
             return DefaultFieldSerializer.Serialize(value).First().FieldValue;
         }
 
-        public static string GetSolrMemberProduct(this Expression exp, Type type)
+        public static string GetSolrMemberProduct(this Expression exp, Type type, bool disableFunctions = false)
         {
             try
             {
@@ -65,14 +65,10 @@ namespace SolrNet.Linq.Expressions
                     if (memberInfo.DeclaringType == type)
                     {
                         return memberInfo.GetMemberSolrName();
-                    }
-
-                    // Access to member of other type can't be translated, so assume it should be used as a value
-                    object value = Expression.Lambda(lambdaExp).Compile().DynamicInvoke();
-                    return value.SerializeToSolrDefault();
+                    }                    
                 }
 
-                if (exp is BinaryExpression bin)
+                if (!disableFunctions && exp is BinaryExpression bin)
                 {
                     if (BinaryHelper.ContainsKey(bin.NodeType))
                     {
@@ -80,7 +76,7 @@ namespace SolrNet.Linq.Expressions
                     }
                 }
 
-                if (exp is MethodCallExpression call)
+                if (!disableFunctions && exp is MethodCallExpression call)
                 {
                     string key = call.Method.DeclaringType.FullName + call.Method.Name;
                     if (CallHelper.ContainsKey(key))
@@ -89,22 +85,24 @@ namespace SolrNet.Linq.Expressions
                     }
                 }
 
-                if (exp.NodeType == ExpressionType.Constant)
+                // Access to member of other type can't be translated, so assume it should be used as a value
+                object value = Expression.Lambda(exp).Compile().DynamicInvoke();
+                if (value == null)
                 {
-                    ConstantExpression constantExpression = (ConstantExpression)exp;
-
-                    if (DefaultFieldSerializer.CanHandleType(constantExpression.Type))
-                    {
-                        return DefaultFieldSerializer.Serialize(constantExpression.Value).First().FieldValue;
-                    }
-
-                    throw new InvalidOperationException($"Unable to serialize {constantExpression.Value} value");
+                    return null;
                 }
+
+                if (DefaultFieldSerializer.CanHandleType(value.GetType()))
+                {
+                    return DefaultFieldSerializer.Serialize(value).First().FieldValue;
+                }
+
+                throw new InvalidOperationException($"Unable to serialize '{value}'.");
             }
             catch (InvalidOperationException exception)
             {
                 throw new InvalidOperationException($"Unable to translate SOLR expression {exp}", exception);
-            }
+            }            
 
             throw new InvalidOperationException($"Unable to translate SOLR expression {exp}");
         }
