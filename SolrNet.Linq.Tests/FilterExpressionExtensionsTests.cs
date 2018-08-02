@@ -120,5 +120,42 @@ namespace SolrNet.Linq.Tests
 
             Assert.Equal("id:[* TO *]", _serializer.Serialize(query));
         }
+
+        [Fact]
+        public void ConstantTrue()
+        {
+            Expression<Func<Product, bool>> exp = (Product p) => true;
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("*:*", _serializer.Serialize(query));
+        }
+
+        [Fact]
+        public void VarTrue()
+        {
+            bool b = true;
+            Expression<Func<Product, bool>> exp = (Product p) => b;
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("*:*", _serializer.Serialize(query));
+        }
+
+        [Fact]
+        public void ConstantFalse()
+        {
+            Expression<Func<Product, bool>> exp = (Product p) => false;
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("(*:* NOT *:*)", _serializer.Serialize(query));
+        }
+
+        [Fact]
+        public void NotConstantFalse()
+        {
+            Expression<Func<Product, bool>> exp = (Product p) => !false;
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("*:*", _serializer.Serialize(query));
+        }
     }
 }

@@ -9,6 +9,7 @@ namespace SolrNet.Linq.Expressions
     {
         public static ISolrQuery GetSolrFilterQuery(this Expression expression, Type type)
         {
+            expression = expression.HandleConversion();
             ExpressionType nodeType = expression.NodeType;
 
             if (expression is BinaryExpression binaryExpression)
@@ -21,8 +22,7 @@ namespace SolrNet.Linq.Expressions
                         ISolrQuery right = GetSolrFilterQuery(binaryExpression.Right, type);
 
                         string op = SolrMultipleCriteriaQuery.Operator.AND;
-                        List<ISolrQuery> queries = GetMultipleCriteriaQuery(left, right, op);
-                        return new SolrMultipleCriteriaQuery(queries, op);
+                        return GetMultipleCriteriaQuery(left, right, op);                        
                     }
 
                     case ExpressionType.OrElse:
@@ -31,8 +31,7 @@ namespace SolrNet.Linq.Expressions
                         ISolrQuery right = GetSolrFilterQuery(binaryExpression.Right, type);
 
                         string op = SolrMultipleCriteriaQuery.Operator.OR;
-                        List<ISolrQuery> queries = GetMultipleCriteriaQuery(left, right, op);
-                        return new SolrMultipleCriteriaQuery(queries, op);
+                        return GetMultipleCriteriaQuery(left, right, op);
                     }
 
                     case ExpressionType.NotEqual:
@@ -51,7 +50,17 @@ namespace SolrNet.Linq.Expressions
                     case ExpressionType.LessThan:
                     case ExpressionType.LessThanOrEqual:
                     {
-                        Tuple<MemberExpression, Expression, bool> memberToLeft = binaryExpression.MemberToLeft(type);
+                        Tuple<MemberExpression, Expression, bool> memberToLeft;
+                        try
+                        {
+                            memberToLeft = binaryExpression.MemberToLeft(type);
+                        }
+                        // No member access, try to calculate constant expression
+                        catch (InvalidOperationException)
+                        {
+                            throw;
+                        }
+
                         KeyValuePair<string, string> kvp = memberToLeft.MemberValue(type);
                         string from = null;
                         string to = null;
@@ -89,7 +98,7 @@ namespace SolrNet.Linq.Expressions
                         ISolrQuery operand = GetSolrFilterQuery(unaryExpression.Operand, type);
                         ISolrQuery result = CreateNotSolrQuery(operand);
                         return result;
-                    }
+                    }                    
                 }
             }
 
@@ -101,16 +110,70 @@ namespace SolrNet.Linq.Expressions
                         $"Member '{memberExpression.Member.Name}' must be boolean to be a part of filter");
                 }
 
-                return new SolrQueryByField(expression.GetSolrMemberProduct(type),
-                    Expression.Constant(true).GetSolrMemberProduct(type));
+                if (memberExpression.Member.DeclaringType == type)
+                {
+                    return new SolrQueryByField(expression.GetSolrMemberProduct(type),
+                        Expression.Constant(true).GetSolrMemberProduct(type));
+                }
+                else
+                {
+                    // try to calculate
+                    return ConstantToConstant(expression, Expression.Constant(true), (a, b) => (bool)a == (bool)b);
+                }
+            }
+
+            if (expression is ConstantExpression constantExpression)
+            {
+                return ConstantToConstant(expression, Expression.Constant(true), (a, b) => (bool)a == (bool)b);
+            }
+
+            if (expression is ConditionalExpression conditionalExpression)
+            {
+                throw new NotImplementedException();
+                //return Conditional(conditionalExpression, true, type);
             }
 
             throw new InvalidOperationException(
                 $"Node type {nodeType} not supported in filter query");
         }
 
-        private static List<ISolrQuery> GetMultipleCriteriaQuery(ISolrQuery left, ISolrQuery right, string criteriaOperator)
+        private static ISolrQuery ConstantToConstant(Expression a, Expression b, Func<object, object, bool> valueCheck)
         {
+            object v1 = Expression.Lambda(a).Compile().DynamicInvoke();
+            object v2 = Expression.Lambda(b).Compile().DynamicInvoke();
+
+            if (valueCheck(v1,v2))
+            {
+                return SolrQuery.All;
+            }
+
+            return CreateNotSolrQuery(SolrQuery.All);
+        }
+
+        private static ISolrQuery Conditional(ConditionalExpression expression, Func<object,bool> valueCheck, Type type)
+        {
+            throw new NotImplementedException();
+            Tuple<MemberExpression, Expression, bool> memberToLeft =
+                MemberToLeft(expression.IfTrue, expression.IfFalse, type);
+        }
+
+        private static ISolrQuery GetMultipleCriteriaQuery(ISolrQuery left, ISolrQuery right, string criteriaOperator)
+        {
+            if (left == right)
+            {
+                return left;
+            }
+
+            if (left == SolrQuery.All)
+            {
+                return right;
+            }
+
+            if (right == SolrQuery.All)
+            {
+                return left;
+            }
+
             SolrMultipleCriteriaQuery leftAnd = left as SolrMultipleCriteriaQuery;
             SolrMultipleCriteriaQuery rightAnd = right as SolrMultipleCriteriaQuery;
 
@@ -134,7 +197,7 @@ namespace SolrNet.Linq.Expressions
                 queries.Add(right);
             }
 
-            return queries;
+            return new SolrMultipleCriteriaQuery(queries, criteriaOperator);
         }
 
         private static ISolrQuery CreateNotSolrQuery(ISolrQuery operand)
