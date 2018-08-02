@@ -50,14 +50,14 @@ namespace SolrNet.Linq
 
         public object Execute(Expression expression)
         {
-            SolrQueryTranslator translator = new SolrQueryTranslator(this.SolrQuery, this.QueryOptions);
+            SolrQueryTranslator<TEntity> translator = new SolrQueryTranslator<TEntity>(this.SolrQuery, this.QueryOptions);
             var result = translator.Translate(this, expression);
             return Operations.Query(result.Item1, result.Item2);
         }
 
         public Task<SolrQueryResults<TEntity>> ExecuteAsync(Expression expression)
         {
-            SolrQueryTranslator translator = new SolrQueryTranslator(this.SolrQuery, this.QueryOptions);
+            SolrQueryTranslator<TEntity> translator = new SolrQueryTranslator<TEntity>(this.SolrQuery, this.QueryOptions);
             var result = translator.Translate(this, expression);
             return Operations.QueryAsync(result.Item1, result.Item2);
         }

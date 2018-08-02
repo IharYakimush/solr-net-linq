@@ -14,7 +14,7 @@ namespace SolrNet.Linq.Tests
         public void Member()
         {
             Expression<Func<Product, bool>> exp = (Product p) => p.InStock;
-            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery();
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
             
             Assert.Equal("inStock_b:(true)", _serializer.Serialize(query));
         }

@@ -12,20 +12,20 @@ namespace SolrNet.Linq.Expressions
 {
     public static class MemberExpressionExtensions
     {
-        private static readonly Dictionary<ExpressionType, Func<BinaryExpression, string>> BinaryHelper = new Dictionary<ExpressionType, Func<BinaryExpression, string>> {
-            { ExpressionType.Divide ,(b) => $"div({b.Left.GetSolrMemberProduct()},{b.Right.GetSolrMemberProduct()})" },
-            { ExpressionType.Subtract ,(b) => $"sub({b.Left.GetSolrMemberProduct()},{b.Right.GetSolrMemberProduct()})" },
-            { ExpressionType.Multiply ,(b) => $"mul({b.Left.GetSolrMemberProduct()},{b.Right.GetSolrMemberProduct()})" },
-            { ExpressionType.Add ,(b) => $"sum({b.Left.GetSolrMemberProduct()},{b.Right.GetSolrMemberProduct()})" },
+        private static readonly Dictionary<ExpressionType, Func<BinaryExpression, Type, string>> BinaryHelper = new Dictionary<ExpressionType, Func<BinaryExpression, Type, string>> {
+            { ExpressionType.Divide ,(b,t) => $"div({b.Left.GetSolrMemberProduct(t)},{b.Right.GetSolrMemberProduct(t)})" },
+            { ExpressionType.Subtract ,(b,t) => $"sub({b.Left.GetSolrMemberProduct(t)},{b.Right.GetSolrMemberProduct(t)})" },
+            { ExpressionType.Multiply ,(b,t) => $"mul({b.Left.GetSolrMemberProduct(t)},{b.Right.GetSolrMemberProduct(t)})" },
+            { ExpressionType.Add ,(b,t) => $"sum({b.Left.GetSolrMemberProduct(t)},{b.Right.GetSolrMemberProduct(t)})" },
         };
 
-        private static readonly Dictionary<string, Func<MethodCallExpression, string>> CallHelper = new Dictionary<string, Func<MethodCallExpression, string>> {
-            { typeof(Math).FullName + nameof(Math.Abs) ,(c) => $"abs({c.Arguments[0].GetSolrMemberProduct()})" },
-            { typeof(Math).FullName + nameof(Math.Log10) ,(c) => $"log({c.Arguments[0].GetSolrMemberProduct()})" },
-            { typeof(Math).FullName + nameof(Math.Max) ,(c) => $"max({c.Arguments[0].GetSolrMemberProduct()},{c.Arguments[1].GetSolrMemberProduct()})" },
-            { typeof(Math).FullName + nameof(Math.Min) ,(c) => $"min({c.Arguments[0].GetSolrMemberProduct()},{c.Arguments[1].GetSolrMemberProduct()})" },
-            { typeof(Math).FullName + nameof(Math.Pow) ,(c) => $"pow({c.Arguments[0].GetSolrMemberProduct()},{c.Arguments[1].GetSolrMemberProduct()})" },
-            { typeof(Math).FullName + nameof(Math.Sqrt) ,(c) => $"sqrt({c.Arguments[0].GetSolrMemberProduct()})" },
+        private static readonly Dictionary<string, Func<MethodCallExpression, Type, string>> CallHelper = new Dictionary<string, Func<MethodCallExpression, Type, string>> {
+            { typeof(Math).FullName + nameof(Math.Abs) ,(c,t) => $"abs({c.Arguments[0].GetSolrMemberProduct(t)})" },
+            { typeof(Math).FullName + nameof(Math.Log10) ,(c,t) => $"log({c.Arguments[0].GetSolrMemberProduct(t)})" },
+            { typeof(Math).FullName + nameof(Math.Max) ,(c,t) => $"max({c.Arguments[0].GetSolrMemberProduct(t)},{c.Arguments[1].GetSolrMemberProduct(t)})" },
+            { typeof(Math).FullName + nameof(Math.Min) ,(c,t) => $"min({c.Arguments[0].GetSolrMemberProduct(t)},{c.Arguments[1].GetSolrMemberProduct(t)})" },
+            { typeof(Math).FullName + nameof(Math.Pow) ,(c,t) => $"pow({c.Arguments[0].GetSolrMemberProduct(t)},{c.Arguments[1].GetSolrMemberProduct(t)})" },
+            { typeof(Math).FullName + nameof(Math.Sqrt) ,(c,t) => $"sqrt({c.Arguments[0].GetSolrMemberProduct(t)})" },
         };
 
         private static readonly DefaultFieldSerializer DefaultFieldSerializer = new DefaultFieldSerializer();
@@ -47,7 +47,7 @@ namespace SolrNet.Linq.Expressions
             });
         }
 
-        public static string GetSolrMemberProduct(this Expression exp)
+        public static string GetSolrMemberProduct(this Expression exp, Type type)
         {
             try
             {
@@ -57,14 +57,21 @@ namespace SolrNet.Linq.Expressions
                 {
                     MemberInfo memberInfo = lambdaExp.Member;
 
-                    return memberInfo.GetMemberSolrName();
+                    if (memberInfo.DeclaringType == type)
+                    {
+                        return memberInfo.GetMemberSolrName();
+                    }
+
+                    // Access to member of other type can't be translated, so assume it should be used as a value
+                    object value = Expression.Lambda(lambdaExp).Compile().DynamicInvoke();
+                    return DefaultFieldSerializer.Serialize(value).First().FieldValue;
                 }
 
                 if (exp is BinaryExpression bin)
                 {
                     if (BinaryHelper.ContainsKey(bin.NodeType))
                     {
-                        return BinaryHelper[bin.NodeType].Invoke(bin);
+                        return BinaryHelper[bin.NodeType].Invoke(bin, type);
                     }
                 }
 
@@ -73,7 +80,7 @@ namespace SolrNet.Linq.Expressions
                     string key = call.Method.DeclaringType.FullName + call.Method.Name;
                     if (CallHelper.ContainsKey(key))
                     {
-                        return CallHelper[key].Invoke(call);
+                        return CallHelper[key].Invoke(call, type);
                     }
                 }
 

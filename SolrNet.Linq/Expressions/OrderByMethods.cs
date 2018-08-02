@@ -13,7 +13,7 @@ namespace SolrNet.Linq.Expressions
         public const string ThenBy = nameof(Queryable.ThenBy);
         public const string ThenByDescending = nameof(Queryable.ThenByDescending);
 
-        public static bool TryVisitSorting(this MethodCallExpression node, QueryOptions options)
+        public static bool TryVisitSorting(this MethodCallExpression node, QueryOptions options, Type type)
         {
             bool asc = node.Method.Name == OrderBy || node.Method.Name == ThenBy;
             bool desc = node.Method.Name == OrderByDescending || node.Method.Name == ThenByDescending;
@@ -22,13 +22,13 @@ namespace SolrNet.Linq.Expressions
 
             if (result)
             {
-                Visit(node, options, asc ? Order.ASC : Order.DESC);
+                Visit(node, options, asc ? Order.ASC : Order.DESC, type);
             }
 
             return result;
         }
 
-        private static void Visit(MethodCallExpression node, QueryOptions options, Order order)
+        private static void Visit(MethodCallExpression node, QueryOptions options, Order order, Type type)
         {
             if (options.OrderBy.Any() && (node.Method.Name == OrderBy || node.Method.Name == OrderByDescending))
             {
@@ -43,7 +43,7 @@ namespace SolrNet.Linq.Expressions
                 LambdaExpression lambda = (LambdaExpression)node.Arguments[1].StripQuotes();
                 Expression orderingMember = lambda.Body;
 
-                string solrExpression = orderingMember.GetSolrMemberProduct();
+                string solrExpression = orderingMember.GetSolrMemberProduct(type);
                 options.OrderBy.Add(new SortOrder(solrExpression, order));
             }
             else

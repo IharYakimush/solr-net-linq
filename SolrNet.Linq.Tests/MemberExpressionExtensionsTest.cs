@@ -12,7 +12,7 @@ namespace SolrNet.Linq.Tests
         {
             Expression<Func<Product,object>> exp = (Product p) => p.Popularity;
 
-            Assert.Equal("popularity", exp.Body.GetSolrMemberProduct());            
+            Assert.Equal("popularity", exp.Body.GetSolrMemberProduct(typeof(Product)));            
         }
 
         [Fact]
@@ -20,7 +20,16 @@ namespace SolrNet.Linq.Tests
         {
             Expression<Func<Product, object>> exp = (Product p) => p.Popularity / 10;
 
-            Assert.Equal("div(popularity,10)", exp.Body.GetSolrMemberProduct());
+            Assert.Equal("div(popularity,10)", exp.Body.GetSolrMemberProduct(typeof(Product)));
+        }
+
+        [Fact]
+        public void DivVariable()
+        {
+            double qwe = 12;
+            Expression<Func<Product, object>> exp = (Product p) => p.Sequence / qwe;
+
+            Assert.Equal("div(sequence_i,12)", exp.Body.GetSolrMemberProduct(typeof(Product)));
         }
 
         [Fact]
@@ -28,7 +37,7 @@ namespace SolrNet.Linq.Tests
         {
             Expression<Func<Product, object>> exp = (Product p) => p.Popularity - 10;
 
-            Assert.Equal("sub(popularity,10)", exp.Body.GetSolrMemberProduct());
+            Assert.Equal("sub(popularity,10)", exp.Body.GetSolrMemberProduct(typeof(Product)));
         }
 
         [Fact]
@@ -36,7 +45,7 @@ namespace SolrNet.Linq.Tests
         {
             Expression<Func<Product, object>> exp = (Product p) => p.Popularity + 10;
 
-            Assert.Equal("sum(popularity,10)", exp.Body.GetSolrMemberProduct());
+            Assert.Equal("sum(popularity,10)", exp.Body.GetSolrMemberProduct(typeof(Product)));
         }
 
         [Fact]
@@ -44,7 +53,7 @@ namespace SolrNet.Linq.Tests
         {
             Expression<Func<Product, object>> exp = (Product p) => p.Popularity * 10;
 
-            Assert.Equal("mul(popularity,10)", exp.Body.GetSolrMemberProduct());
+            Assert.Equal("mul(popularity,10)", exp.Body.GetSolrMemberProduct(typeof(Product)));
         }
 
         [Fact]
@@ -52,7 +61,7 @@ namespace SolrNet.Linq.Tests
         {
             Expression<Func<Product, object>> exp = (Product p) => Math.Abs(p.Sequence);
 
-            Assert.Equal("abs(sequence_i)", exp.Body.GetSolrMemberProduct());
+            Assert.Equal("abs(sequence_i)", exp.Body.GetSolrMemberProduct(typeof(Product)));
         }
 
         [Fact]
@@ -60,7 +69,7 @@ namespace SolrNet.Linq.Tests
         {
             Expression<Func<Product, object>> exp = (Product p) => Math.Log10(p.Sequence);
 
-            Assert.Equal("log(sequence_i)", exp.Body.GetSolrMemberProduct());
+            Assert.Equal("log(sequence_i)", exp.Body.GetSolrMemberProduct(typeof(Product)));
         }
 
         [Fact]
@@ -68,7 +77,7 @@ namespace SolrNet.Linq.Tests
         {
             Expression<Func<Product, object>> exp = (Product p) => Math.Max(p.Sequence, 11);
 
-            Assert.Equal("max(sequence_i,11)", exp.Body.GetSolrMemberProduct());
+            Assert.Equal("max(sequence_i,11)", exp.Body.GetSolrMemberProduct(typeof(Product)));
         }
 
         [Fact]
@@ -76,7 +85,7 @@ namespace SolrNet.Linq.Tests
         {
             Expression<Func<Product, object>> exp = (Product p) => Math.Min(p.Sequence, 11);
 
-            Assert.Equal("min(sequence_i,11)", exp.Body.GetSolrMemberProduct());
+            Assert.Equal("min(sequence_i,11)", exp.Body.GetSolrMemberProduct(typeof(Product)));
         }
 
         [Fact]
@@ -84,7 +93,7 @@ namespace SolrNet.Linq.Tests
         {
             Expression<Func<Product, object>> exp = (Product p) => Math.Pow(p.Sequence, 11);
 
-            Assert.Equal("pow(sequence_i,11)", exp.Body.GetSolrMemberProduct());
+            Assert.Equal("pow(sequence_i,11)", exp.Body.GetSolrMemberProduct(typeof(Product)));
         }
 
         [Fact]
@@ -92,7 +101,7 @@ namespace SolrNet.Linq.Tests
         {
             Expression<Func<Product, object>> exp = (Product p) => Math.Sqrt(p.Sequence);
 
-            Assert.Equal("sqrt(sequence_i)", exp.Body.GetSolrMemberProduct());
+            Assert.Equal("sqrt(sequence_i)", exp.Body.GetSolrMemberProduct(typeof(Product)));
         }
     }
 }

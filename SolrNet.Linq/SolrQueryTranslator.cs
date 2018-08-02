@@ -6,7 +6,7 @@ using SolrNet.Linq.Expressions;
 
 namespace SolrNet.Linq
 {
-    public class SolrQueryTranslator : ExpressionVisitor
+    public class SolrQueryTranslator<TEntity> : ExpressionVisitor
     {
         public ISolrQuery SolrQuery { get; }
         public QueryOptions Options { get; }
@@ -29,8 +29,8 @@ namespace SolrNet.Linq
 
             bool result = node.TryVisitTake(this.Options);
             result |= node.TryVisitSkip(this.Options);
-            result |= node.TryVisitSorting(this.Options);
-            result |= node.TryVisitWhere(this.Options);
+            result |= node.TryVisitSorting(this.Options, typeof(TEntity));
+            result |= node.TryVisitWhere(this.Options, typeof(TEntity));
 
             if (!result && !(node.Method.DeclaringType == typeof(Queryable) && node.Method.Name == nameof(Queryable.OfType)))
             {

@@ -7,7 +7,7 @@ namespace SolrNet.Linq.Expressions
 {
     public static class FilterExpressionExtensions
     {
-        public static ISolrQuery GetSolrFilterQuery(this Expression expression)
+        public static ISolrQuery GetSolrFilterQuery(this Expression expression, Type type)
         {
             ExpressionType nodeType = expression.NodeType;
 
@@ -17,8 +17,8 @@ namespace SolrNet.Linq.Expressions
                 {
                     case ExpressionType.AndAlso:
                     {
-                        ISolrQuery left = GetSolrFilterQuery(binaryExpression.Left);
-                        ISolrQuery right = GetSolrFilterQuery(binaryExpression.Right);
+                        ISolrQuery left = GetSolrFilterQuery(binaryExpression.Left, type);
+                        ISolrQuery right = GetSolrFilterQuery(binaryExpression.Right, type);
 
                         string op = SolrMultipleCriteriaQuery.Operator.AND;
                         List<ISolrQuery> queries = GetMultipleCriteriaQuery(left, right, op);
@@ -27,8 +27,8 @@ namespace SolrNet.Linq.Expressions
 
                     case ExpressionType.OrElse:
                     {
-                        ISolrQuery left = GetSolrFilterQuery(binaryExpression.Left);
-                        ISolrQuery right = GetSolrFilterQuery(binaryExpression.Right);
+                        ISolrQuery left = GetSolrFilterQuery(binaryExpression.Left, type);
+                        ISolrQuery right = GetSolrFilterQuery(binaryExpression.Right, type);
 
                         string op = SolrMultipleCriteriaQuery.Operator.OR;
                         List<ISolrQuery> queries = GetMultipleCriteriaQuery(left, right, op);
@@ -43,7 +43,7 @@ namespace SolrNet.Linq.Expressions
                 {
                     case ExpressionType.Not:
                     {
-                        ISolrQuery operand = GetSolrFilterQuery(unaryExpression.Operand);
+                        ISolrQuery operand = GetSolrFilterQuery(unaryExpression.Operand, type);
                         ISolrQuery result = CreateNotSolrQuery(operand);
                         return result;
                     }
@@ -58,8 +58,8 @@ namespace SolrNet.Linq.Expressions
                         $"Member '{memberExpression.Member.Name}' must be boolean to be a part of filter");
                 }
 
-                return new SolrQueryByField(expression.GetSolrMemberProduct(),
-                    Expression.Constant(true).GetSolrMemberProduct());
+                return new SolrQueryByField(expression.GetSolrMemberProduct(type),
+                    Expression.Constant(true).GetSolrMemberProduct(type));
             }
 
             throw new InvalidOperationException(
