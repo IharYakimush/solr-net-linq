@@ -157,5 +157,14 @@ namespace SolrNet.Linq.Tests
 
             Assert.Equal("*:*", _serializer.Serialize(query));
         }
+
+        [Fact]
+        public void Conditional()
+        {
+            Expression<Func<Product, bool>> exp = (Product p) => p.Popularity != null ? p.InStock : false;
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("((popularity:[* TO *] AND inStock_b:(true)) OR ((*:* NOT popularity:[* TO *]) AND (*:* NOT *:*)))", _serializer.Serialize(query));
+        }
     }
 }

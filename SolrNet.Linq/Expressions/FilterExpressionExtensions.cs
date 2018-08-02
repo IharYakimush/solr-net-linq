@@ -129,8 +129,7 @@ namespace SolrNet.Linq.Expressions
 
             if (expression is ConditionalExpression conditionalExpression)
             {
-                throw new NotImplementedException();
-                //return Conditional(conditionalExpression, true, type);
+                return Conditional(conditionalExpression, type);
             }
 
             throw new InvalidOperationException(
@@ -150,11 +149,18 @@ namespace SolrNet.Linq.Expressions
             return CreateNotSolrQuery(SolrQuery.All);
         }
 
-        private static ISolrQuery Conditional(ConditionalExpression expression, Func<object,bool> valueCheck, Type type)
+        private static ISolrQuery Conditional(ConditionalExpression expression, Type type)
         {
-            throw new NotImplementedException();
-            Tuple<MemberExpression, Expression, bool> memberToLeft =
-                MemberToLeft(expression.IfTrue, expression.IfFalse, type);
+            ISolrQuery testPositive = expression.Test.GetSolrFilterQuery(type);
+            ISolrQuery trueCase = expression.IfTrue.GetSolrFilterQuery(type);
+
+            ISolrQuery testNegative = CreateNotSolrQuery(testPositive);
+            ISolrQuery falseCase = expression.IfFalse.GetSolrFilterQuery(type);
+
+            return GetMultipleCriteriaQuery(
+                GetMultipleCriteriaQuery(testPositive, trueCase, SolrMultipleCriteriaQuery.Operator.AND),
+                GetMultipleCriteriaQuery(testNegative, falseCase, SolrMultipleCriteriaQuery.Operator.AND),
+                SolrMultipleCriteriaQuery.Operator.OR);
         }
 
         private static ISolrQuery GetMultipleCriteriaQuery(ISolrQuery left, ISolrQuery right, string criteriaOperator)
