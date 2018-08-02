@@ -30,7 +30,8 @@ namespace SolrNet.Linq
             bool result = node.TryVisitTake(this.Options);
             result |= node.TryVisitSkip(this.Options);
             result |= node.TryVisitSorting(this.Options);
-            
+            result |= node.TryVisitWhere(this.Options);
+
             if (!result && !(node.Method.DeclaringType == typeof(Queryable) && node.Method.Name == nameof(Queryable.OfType)))
             {
                 throw new InvalidOperationException($"Method '{node.Method.Name}' not supported.");

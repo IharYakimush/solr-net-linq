@@ -46,6 +46,10 @@ namespace SolrNet.Linq.Expressions
                 string solrExpression = orderingMember.GetSolrMemberProduct();
                 options.OrderBy.Add(new SortOrder(solrExpression, order));
             }
+            else
+            {
+                throw new InvalidOperationException($"Unable to translate '{node.Method.Name}' method. Unexpected node type {arg.NodeType}");
+            }
         }                
     }
 }
