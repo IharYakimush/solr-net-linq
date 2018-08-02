@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SolrNet.Attributes;
 using SolrNet.Mapping;
 
-namespace SolrNet.Linq.IntegrationOData
+namespace SolrNet.IntegrationOData
 {
     public class Product
     {

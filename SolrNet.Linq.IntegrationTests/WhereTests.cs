@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using Xunit;
 
-namespace SolrNet.Linq.IntegrationTests
+namespace SolrNet.Linq.IntegrationOData
 {
     public class WhereTests
     {

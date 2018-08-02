@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace SolrNet.Linq.IntegrationTests
+namespace SolrNet.Linq.IntegrationOData
 {
     public class InitTests
     {        

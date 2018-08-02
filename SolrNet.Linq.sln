@@ -13,7 +13,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		localenv.ps1 = localenv.ps1
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolrNet.Linq.Tests", "SolrNet.Linq.Tests\SolrNet.Linq.Tests.csproj", "{DC28570D-40E8-4D3C-8A7D-DE0B11100B52}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SolrNet.Linq.Tests", "SolrNet.Linq.Tests\SolrNet.Linq.Tests.csproj", "{DC28570D-40E8-4D3C-8A7D-DE0B11100B52}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolrNet.IntegrationOData", "SolrNet.IntegrationOData\SolrNet.IntegrationOData.csproj", "{C2FA1EB5-3E4D-4412-B2AB-892E8B37796D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{DC28570D-40E8-4D3C-8A7D-DE0B11100B52}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DC28570D-40E8-4D3C-8A7D-DE0B11100B52}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DC28570D-40E8-4D3C-8A7D-DE0B11100B52}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2FA1EB5-3E4D-4412-B2AB-892E8B37796D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2FA1EB5-3E4D-4412-B2AB-892E8B37796D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2FA1EB5-3E4D-4412-B2AB-892E8B37796D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2FA1EB5-3E4D-4412-B2AB-892E8B37796D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
