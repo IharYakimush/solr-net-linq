@@ -34,6 +34,38 @@ namespace SolrNet.Linq.Expressions
                         List<ISolrQuery> queries = GetMultipleCriteriaQuery(left, right, op);
                         return new SolrMultipleCriteriaQuery(queries, op);
                     }
+
+                    case ExpressionType.GreaterThan:
+                    case ExpressionType.GreaterThanOrEqual:
+                    case ExpressionType.LessThan:
+                    case ExpressionType.LessThanOrEqual:
+                    {
+                        Tuple<MemberExpression, Expression, bool> memberToLeft = binaryExpression.MemberToLeft(type);
+                        KeyValuePair<string, object> kvp = memberToLeft.MemberValue(type);
+                        string from = null;
+                        string to = null;
+                        bool directGreater = (nodeType == ExpressionType.GreaterThan ||
+                                              nodeType == ExpressionType.GreaterThanOrEqual) &&
+                                             !memberToLeft.Item3;
+
+                        bool reverseGreater = (nodeType == ExpressionType.LessThan ||
+                                               nodeType == ExpressionType.LessThanOrEqual) &&
+                                              memberToLeft.Item3;
+
+                        if (directGreater || reverseGreater)
+                        {
+                            from = kvp.Value.SerializeToSolrDefault();
+                        }
+                        else
+                        {
+                            to = kvp.Value.SerializeToSolrDefault();
+                        }
+
+                        bool inc = nodeType == ExpressionType.GreaterThanOrEqual ||
+                                   nodeType == ExpressionType.LessThanOrEqual;
+
+                        return new SolrQueryByRange<string>(kvp.Key, from, to, inc);
+                    }
                 }
             }
 
@@ -105,6 +137,47 @@ namespace SolrNet.Linq.Expressions
             }
 
             return new SolrMultipleCriteriaQuery(new[] {SolrQuery.All, operand}, "NOT");
+        }
+
+        public static Tuple<MemberExpression, Expression, bool> MemberToLeft(this BinaryExpression expression, Type type)
+        {
+            return MemberToLeft(expression.Left, expression.Right, type);
+        }
+
+        public static Tuple<MemberExpression, Expression, bool> MemberToLeft(Expression l, Expression r, Type type)
+        {
+            Expression a = l.HandleConversion();
+            Expression b = r.HandleConversion();
+
+            if (a is MemberExpression am && am.Member.DeclaringType == type)
+            {
+                return new Tuple<MemberExpression, Expression, bool>(am, b, false);
+            }
+
+            if (b is MemberExpression bm && bm.Member.DeclaringType == type)
+            {
+                return new Tuple<MemberExpression, Expression, bool>(bm, a, true);
+            }
+
+            throw new InvalidOperationException(
+                $"Access to member of type '{type}' not found in both '{a}' and '{b}'.");
+        }
+
+        public static KeyValuePair<string, object> MemberValue(this Tuple<MemberExpression, Expression, bool> member, Type type)
+        {
+            string key = member.Item1.GetSolrMemberProduct(type);
+            object dynamicInvoke;
+
+            try
+            {
+                dynamicInvoke = Expression.Lambda(member.Item2).Compile().DynamicInvoke();
+            }
+            catch (Exception e)
+            {
+                throw new InvalidOperationException($"Unable to resolve value for {member.Item1}", e);
+            }
+            
+            return new KeyValuePair<string, object>(key, dynamicInvoke);
         }
     }
 }

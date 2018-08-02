@@ -29,8 +29,8 @@ namespace SolrNet.Linq.Expressions
         };
 
         private static readonly DefaultFieldSerializer DefaultFieldSerializer = new DefaultFieldSerializer();
-        private static readonly ConcurrentDictionary<MemberInfo, string> MemberNames =
-            new ConcurrentDictionary<MemberInfo, string>();
+
+        private static readonly ConcurrentDictionary<MemberInfo, string> MemberNames = new ConcurrentDictionary<MemberInfo, string>();
 
         public static string GetMemberSolrName(this MemberInfo info)
         {
@@ -45,6 +45,11 @@ namespace SolrNet.Linq.Expressions
 
                 return att.FieldName;
             });
+        }
+
+        internal static string SerializeToSolrDefault(this object value)
+        {
+            return DefaultFieldSerializer.Serialize(value).First().FieldValue;
         }
 
         public static string GetSolrMemberProduct(this Expression exp, Type type)
@@ -64,7 +69,7 @@ namespace SolrNet.Linq.Expressions
 
                     // Access to member of other type can't be translated, so assume it should be used as a value
                     object value = Expression.Lambda(lambdaExp).Compile().DynamicInvoke();
-                    return DefaultFieldSerializer.Serialize(value).First().FieldValue;
+                    return value.SerializeToSolrDefault();
                 }
 
                 if (exp is BinaryExpression bin)
