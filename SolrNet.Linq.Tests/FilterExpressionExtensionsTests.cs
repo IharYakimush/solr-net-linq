@@ -245,7 +245,7 @@ namespace SolrNet.Linq.Tests
             Expression<Func<Product, bool>> exp = (Product p) => p.InStock == true;
             ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
 
-            Assert.Equal("(*:* NOT popularity:[* TO *])", _serializer.Serialize(query));
+            Assert.Equal("inStock_b:(true)", _serializer.Serialize(query));
         }
 
         [Fact]
@@ -255,8 +255,19 @@ namespace SolrNet.Linq.Tests
             Expression<Func<Product, bool>> exp = (Product p) => p.InStock == b;
             ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
 
+            Assert.Equal("inStock_b:(true)", _serializer.Serialize(query));
+        }
+
+        [Fact]
+        public void MemberEqualNull()
+        {
+            bool b = true;
+            Expression<Func<Product, bool>> exp = (Product p) => p.Popularity == null;
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
             Assert.Equal("(*:* NOT popularity:[* TO *])", _serializer.Serialize(query));
         }
+
         [Fact]
         public void MemberEqualVarNullableTrue()
         {
@@ -264,7 +275,7 @@ namespace SolrNet.Linq.Tests
             Expression<Func<Product, bool>> exp = (Product p) => p.InStock == b;
             ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
 
-            Assert.Equal("(*:* NOT popularity:[* TO *])", _serializer.Serialize(query));
+            Assert.Equal("inStock_b:(true)", _serializer.Serialize(query));
         }
 
         [Fact]
@@ -273,7 +284,7 @@ namespace SolrNet.Linq.Tests
             Expression<Func<Product, bool>> exp = (Product p) => p.InStock == false;
             ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
 
-            Assert.Equal("(*:* NOT popularity:[* TO *])", _serializer.Serialize(query));
+            Assert.Equal("inStock_b:(false)", _serializer.Serialize(query));
         }
 
         [Fact]
@@ -282,7 +293,7 @@ namespace SolrNet.Linq.Tests
             Expression<Func<Product, bool>> exp = (Product p) => p.Price == 2;
             ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
 
-            Assert.Equal("(*:* NOT popularity:[* TO *])", _serializer.Serialize(query));
+            Assert.Equal("price:(2)", _serializer.Serialize(query));
         }
 
         [Fact]
@@ -291,7 +302,7 @@ namespace SolrNet.Linq.Tests
             Expression<Func<Product, bool>> exp = (Product p) => 2 == p.Price;
             ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
 
-            Assert.Equal("(*:* NOT popularity:[* TO *])", _serializer.Serialize(query));
+            Assert.Equal("price:(2)", _serializer.Serialize(query));
         }
 
         [Fact]
@@ -301,7 +312,7 @@ namespace SolrNet.Linq.Tests
             Expression<Func<Product, bool>> exp = (Product p) => p.Price == i;
             ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
 
-            Assert.Equal("(*:* NOT popularity:[* TO *])", _serializer.Serialize(query));
+            Assert.Equal("price:(2)", _serializer.Serialize(query));
         }
 
         [Fact]
