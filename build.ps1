@@ -1,0 +1,1 @@
+dotnet build SolrNet.Linq.sln -c Release
