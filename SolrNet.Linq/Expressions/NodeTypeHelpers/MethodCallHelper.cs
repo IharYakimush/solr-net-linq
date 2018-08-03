@@ -34,8 +34,17 @@ namespace SolrNet.Linq.Expressions.NodeTypeHelpers
                 // IEnumerable Contains or own e.g. for List<T>
                 if (mce.Arguments.Count >= 2 || (mce.Arguments.Count == 1 && mce.Object != null))
                 {
-                    var obj = mce.Object ?? mce.Arguments[0];
-                    var member = mce.Object == null ? mce.Arguments[1] : mce.Arguments[0];
+                    Expression obj = mce.Object ?? mce.Arguments[0];
+                    Expression arg2 = mce.Object == null ? mce.Arguments[1] : mce.Arguments[0];
+
+                    // Consider array member equal
+                    if (obj.HasMemberAccess(type))
+                    {
+                        return new SolrQueryByField(obj.GetSolrMemberProduct(type, true),
+                            arg2.GetSolrMemberProduct(type, true));
+                    }
+
+                    // Consider in list query
                     IEnumerable list;
                     try
                     {
@@ -47,7 +56,7 @@ namespace SolrNet.Linq.Expressions.NodeTypeHelpers
                             $"Unable to get IEnumerable from '{obj}' expression.", e);
                     }
 
-                    return new SolrQueryInList(member.GetSolrMemberProduct(type, true),
+                    return new SolrQueryInList(arg2.GetSolrMemberProduct(type, true),
                         list.OfType<object>().Select(o => o.SerializeToSolr()));
                 }
             }

@@ -27,9 +27,18 @@ namespace SolrNet.Linq.Tests
         }
 
         [Fact]
-        public void HasMemberMethods()
+        public void HasMemberAny()
         {
             Expression<Func<Product, bool>> exp = (Product p) => p.Categories.Any();
+            bool result = exp.Body.HasMemberAccess(typeof(Product));
+
+            Assert.True(result);
+        }
+
+        [Fact]
+        public void HasMemberContains()
+        {
+            Expression<Func<Product, bool>> exp = (Product p) => p.Categories.Contains("qwe");
             bool result = exp.Body.HasMemberAccess(typeof(Product));
 
             Assert.True(result);

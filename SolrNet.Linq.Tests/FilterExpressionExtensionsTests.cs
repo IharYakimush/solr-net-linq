@@ -407,7 +407,7 @@ namespace SolrNet.Linq.Tests
             Expression<Func<Product, bool>> exp = (Product p) => p.Categories.Contains("qwe");
             ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
 
-            Assert.Equal("cat: qwe", _serializer.Serialize(query));
+            Assert.Equal("cat:(qwe)", _serializer.Serialize(query));
         }
     }
 }
