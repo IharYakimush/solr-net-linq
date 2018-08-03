@@ -45,11 +45,11 @@ To get result you can
 
 ### Top, Skip
 ### OrderBy, OrderByDescending, ThenBy, ThenByDescending
- Order by field
+  - Order by field
  ```
  Product[] result = solrLinq.OrderBy(p => p.Price).ThenBy(p => p.Id).ToArray();
  ```
- Order by functions (not all of SOLR functions currently supported)
+  - Order by functions (not all of SOLR functions currently supported)
  ```
  Product[] result = solrLinq.OrderBy(p => Math.Pow(p.Price,3) + 1).ToArray();
  ```
