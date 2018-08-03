@@ -41,6 +41,11 @@ namespace SolrNet.Linq.Expressions
                         return GetMultipleCriteriaQuery(left, right, op);
                     }
 
+                    case ExpressionType.Equal:
+                    {
+                        return binaryExpression.HandleEqual(type);
+                    }
+
                     case ExpressionType.NotEqual:
                     {
                         Tuple<Expression, Expression, bool> memberToLeft = binaryExpression.MemberToLeft(type);
