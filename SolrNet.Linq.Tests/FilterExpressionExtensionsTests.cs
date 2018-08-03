@@ -159,12 +159,48 @@ namespace SolrNet.Linq.Tests
         }
 
         [Fact]
-        public void Conditional()
+        public void ConditionalTestMemberTrueMemberFalseMember()
+        {
+            Expression<Func<Product, bool>> exp = (Product p) => p.Popularity != null ? p.InStock : p.InStock;
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("((popularity:[* TO *] AND inStock_b:(true)) OR ((*:* NOT popularity:[* TO *]) AND inStock_b:(true)))", _serializer.Serialize(query));
+        }
+
+        [Fact]
+        public void ConditionalTestMemberTrueMemberFalseConstFalse()
         {
             Expression<Func<Product, bool>> exp = (Product p) => p.Popularity != null ? p.InStock : false;
             ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
 
-            Assert.Equal("((popularity:[* TO *] AND inStock_b:(true)) OR ((*:* NOT popularity:[* TO *]) AND (*:* NOT *:*)))", _serializer.Serialize(query));
+            Assert.Equal("(popularity:[* TO *] AND inStock_b:(true))", _serializer.Serialize(query));
+        }
+
+        [Fact]
+        public void ConditionalTestMemberTrueMemberFalseConstTrue()
+        {
+            Expression<Func<Product, bool>> exp = (Product p) => p.Popularity != null ? p.InStock : true;
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("((popularity:[* TO *] AND inStock_b:(true)) OR (*:* NOT popularity:[* TO *]))", _serializer.Serialize(query));
+        }
+
+        [Fact]
+        public void ConditionalTestMemberTrueConstFalseFalseMember()
+        {
+            Expression<Func<Product, bool>> exp = (Product p) => p.Popularity != null ? false : p.InStock;
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("((*:* NOT popularity:[* TO *]) AND inStock_b:(true))", _serializer.Serialize(query));
+        }
+
+        [Fact]
+        public void ConditionalTestMemberTrueConstTrueFalseMember()
+        {
+            Expression<Func<Product, bool>> exp = (Product p) => p.Popularity != null ? true : p.InStock;
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("(popularity:[* TO *] OR ((*:* NOT popularity:[* TO *]) AND inStock_b:(true)))", _serializer.Serialize(query));
         }
     }
 }

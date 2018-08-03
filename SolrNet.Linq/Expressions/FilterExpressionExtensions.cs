@@ -129,7 +129,7 @@ namespace SolrNet.Linq.Expressions
 
             if (expression is ConditionalExpression conditionalExpression)
             {
-                return Conditional(conditionalExpression, type);
+                return Conditional(conditionalExpression, t => t, f => f, type);
             }
 
             throw new InvalidOperationException(
@@ -149,13 +149,13 @@ namespace SolrNet.Linq.Expressions
             return CreateNotSolrQuery(SolrQuery.All);
         }
 
-        private static ISolrQuery Conditional(ConditionalExpression expression, Type type)
+        private static ISolrQuery Conditional(ConditionalExpression expression,Func<Expression,Expression> ifTrueBuilder, Func<Expression, Expression> ifFalseBuilder, Type type)
         {
             ISolrQuery testPositive = expression.Test.GetSolrFilterQuery(type);
-            ISolrQuery trueCase = expression.IfTrue.GetSolrFilterQuery(type);
+            ISolrQuery trueCase = ifTrueBuilder(expression.IfTrue).GetSolrFilterQuery(type);
 
             ISolrQuery testNegative = CreateNotSolrQuery(testPositive);
-            ISolrQuery falseCase = expression.IfFalse.GetSolrFilterQuery(type);
+            ISolrQuery falseCase = ifFalseBuilder(expression.IfFalse).GetSolrFilterQuery(type);
 
             return GetMultipleCriteriaQuery(
                 GetMultipleCriteriaQuery(testPositive, trueCase, SolrMultipleCriteriaQuery.Operator.AND),
@@ -165,6 +165,8 @@ namespace SolrNet.Linq.Expressions
 
         private static ISolrQuery GetMultipleCriteriaQuery(ISolrQuery left, ISolrQuery right, string criteriaOperator)
         {
+            left = left.TrySimplify();
+            right = right.TrySimplify();
             if (left == right)
             {
                 return left;
@@ -178,7 +180,7 @@ namespace SolrNet.Linq.Expressions
             if (right == SolrQuery.All)
             {
                 return left;
-            }
+            }            
 
             SolrMultipleCriteriaQuery leftAnd = left as SolrMultipleCriteriaQuery;
             SolrMultipleCriteriaQuery rightAnd = right as SolrMultipleCriteriaQuery;
@@ -203,7 +205,7 @@ namespace SolrNet.Linq.Expressions
                 queries.Add(right);
             }
 
-            return new SolrMultipleCriteriaQuery(queries, criteriaOperator);
+            return new SolrMultipleCriteriaQuery(queries, criteriaOperator).TrySimplify();
         }
 
         private static ISolrQuery CreateNotSolrQuery(ISolrQuery operand)
