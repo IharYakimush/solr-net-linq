@@ -409,5 +409,25 @@ namespace SolrNet.Linq.Tests
 
             Assert.Equal("cat:(qwe)", _serializer.Serialize(query));
         }
+
+        [Fact]
+        public void CollectionContainsVar()
+        {
+            string i = "qwe";
+            Expression<Func<Product, bool>> exp = (Product p) => p.Categories.Contains(i);
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("cat:(qwe)", _serializer.Serialize(query));
+        }
+
+        [Theory]
+        [InlineData("qwe", "cat:(qwe)")]
+        public void CollectionContainsParam(string item, string expected)
+        {
+            Expression<Func<Product, bool>> exp = (Product p) => p.Categories.Contains(item);
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal(expected, _serializer.Serialize(query));
+        }
     }
 }
