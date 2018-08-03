@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using SolrNet.Impl;
 
 namespace SolrNet.Linq.Expressions
 {
@@ -9,21 +10,13 @@ namespace SolrNet.Linq.Expressions
         {
             if (query is SolrMultipleCriteriaQuery q)
             {
+                LinkedList<ISolrQuery> toTrim = new LinkedList<ISolrQuery>();
+
                 if (q.Queries.Any(sq => sq == SolrQuery.All))
                 {
                     if (q.Oper == SolrMultipleCriteriaQuery.Operator.AND)
                     {
-                        ISolrQuery[] r = q.Queries.Where(sq => sq != SolrQuery.All).ToArray();
-
-                        if (r.Length == 1)
-                        {
-                            return r.Single();
-                        }
-
-                        if (r.Length > 1)
-                        {
-                            return new SolrMultipleCriteriaQuery(r, q.Oper);
-                        }
+                        toTrim.AddLast(SolrQuery.All);
                     }
 
                     if (q.Oper == SolrMultipleCriteriaQuery.Operator.OR)
@@ -41,17 +34,57 @@ namespace SolrNet.Linq.Expressions
 
                     if (q.Oper == SolrMultipleCriteriaQuery.Operator.OR)
                     {
-                        ISolrQuery[] r = q.Queries.Where(sq => !sq.IsNothing()).ToArray();
-
-                        if (r.Length == 1)
+                        foreach (ISolrQuery solrQuery in q.Queries.Where(sq => sq.IsNothing()))
                         {
-                            return r.Single();
+                            toTrim.AddLast(solrQuery);
                         }
+                    }
+                }
 
-                        if (r.Length > 1)
+                IEnumerable<IGrouping<string, ISolrQuery>> ranges = q.Queries
+                    .Where(sq => sq is SolrHasValueQuery || sq is ISolrQueryByRange).GroupBy(
+                        r =>
                         {
-                            return new SolrMultipleCriteriaQuery(r, q.Oper);
+                            if (r is SolrHasValueQuery hq)
+                            {
+                                return hq.Field;
+                            }
+
+                            return (r as ISolrQueryByRange).FieldName;
                         }
+                    );
+
+                foreach (var gr in ranges.Where(g => g.Count() > 1))
+                {
+                    if (q.Oper == SolrMultipleCriteriaQuery.Operator.AND)
+                    {
+                        foreach (SolrHasValueQuery hv in gr.OfType<SolrHasValueQuery>())
+                        {
+                            toTrim.AddLast(hv);
+                        }
+                    }
+
+                    if (q.Oper == SolrMultipleCriteriaQuery.Operator.OR)
+                    {
+                        foreach (ISolrQuery br in gr.OfType<ISolrQueryByRange>().OfType<ISolrQuery>())
+                        {
+                            toTrim.AddLast(br);
+                        }
+                    }
+                }                
+
+                if (toTrim.Any())
+                {
+                    ISolrQuery[] result = q.Queries.Except(toTrim).ToArray();
+
+                    if (result.Length == 1)
+                    {
+                        return result.Single();
+                    }
+
+                    if (result.Length > 1)
+                    {
+                        return new SolrMultipleCriteriaQuery(result, q.Oper);
                     }
                 }
             }
@@ -73,6 +106,6 @@ namespace SolrNet.Linq.Expressions
             }
 
             return false;
-        }
+        }        
     }
 }
