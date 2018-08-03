@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace SolrNet.Linq.Expressions
@@ -61,7 +62,12 @@ namespace SolrNet.Linq.Expressions
             if (expression is UnaryExpression ue)
             {
                 return ue.Operand.HasMemberAccess(type);
-            }            
+            }
+
+            if (expression is MethodCallExpression mc)
+            {
+                return mc.Arguments.Any(e => e.HasMemberAccess(type));
+            }
 
             if (expression is ConditionalExpression ce)
             {

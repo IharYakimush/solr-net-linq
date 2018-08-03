@@ -21,6 +21,7 @@ namespace SolrNet.IntegrationOData.Controllers
             {
                 "http://localhost:64623/api/values/1?$filter=price gt 100&$orderby=Popularity desc&$top=3&$skip=1",
                 "http://localhost:64623/api/values/1?$filter=Popularity ne null",
+                "http://localhost:64623/api/values/1?$filter=Popularity eq null",
             });
         }
 

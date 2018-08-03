@@ -93,17 +93,8 @@ namespace SolrNet.Linq.Expressions
 
                 // Access to member of other type can't be translated, so assume it should be used as a value
                 object value = Expression.Lambda(exp).Compile().DynamicInvoke();
-                if (value == null)
-                {
-                    return null;
-                }
-
-                if (DefaultFieldSerializer.CanHandleType(value.GetType()))
-                {
-                    return DefaultFieldSerializer.Serialize(value).First().FieldValue;
-                }
-
-                throw new InvalidOperationException($"Unable to serialize '{value}'.");
+                
+                return value.SerializeToSolr();
             }
             catch (InvalidOperationException exception)
             {
@@ -111,6 +102,21 @@ namespace SolrNet.Linq.Expressions
             }            
 
             throw new InvalidOperationException($"Unable to translate SOLR expression {exp}");
+        }
+
+        internal static string SerializeToSolr(this object value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+
+            if (DefaultFieldSerializer.CanHandleType(value.GetType()))
+            {
+                return DefaultFieldSerializer.Serialize(value).First().FieldValue;
+            }
+
+            throw new InvalidOperationException($"Unable to serialize '{value}'.");
         }
     }
 }

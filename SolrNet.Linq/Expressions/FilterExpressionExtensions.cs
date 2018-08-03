@@ -80,6 +80,11 @@ namespace SolrNet.Linq.Expressions
                 }
             }
 
+            if (expression is MethodCallExpression methodCallExpression)
+            {
+                return methodCallExpression.HandleMethodCall(type);
+            }
+
             if (expression is MemberExpression memberExpression)
             {
                 return memberExpression.HandleMemberAccess(type);
@@ -88,7 +93,7 @@ namespace SolrNet.Linq.Expressions
             if (expression is ConditionalExpression conditionalExpression)
             {
                 return ConditionalQuery(conditionalExpression, t => t, f => f, type);
-            }            
+            }
 
             throw new InvalidOperationException(
                 $"Node type {nodeType} not supported in filter query");

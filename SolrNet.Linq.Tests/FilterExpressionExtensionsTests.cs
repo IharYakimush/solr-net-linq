@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using SolrNet.Impl.FieldSerializers;
 using SolrNet.Impl.QuerySerializers;
@@ -343,6 +345,69 @@ namespace SolrNet.Linq.Tests
             ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
 
             Assert.Equal("(*:* NOT *:*)", _serializer.Serialize(query));
+        }
+
+        [Fact]
+        public void ContainsArray()
+        {
+            decimal[] a = {1, 2, 3};
+            
+            Expression<Func<Product, bool>> exp = (Product p) =>a.Contains(p.Price) ;
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("(price:((1) OR (2) OR (3)))", _serializer.Serialize(query));
+        }
+
+        [Fact]
+        public void ContainsList()
+        {
+            List<decimal> a = new List<decimal> {1, 2, 3};
+
+            Expression<Func<Product, bool>> exp = (Product p) => a.Contains(p.Price);
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("(price:((1) OR (2) OR (3)))", _serializer.Serialize(query));
+        }
+
+        [Fact]
+        public void ContainsIEnumerable()
+        {
+            IEnumerable<decimal> a = new List<decimal> { 1, 2, 3 };
+
+            Expression<Func<Product, bool>> exp = (Product p) => a.Contains(p.Price);
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("(price:((1) OR (2) OR (3)))", _serializer.Serialize(query));
+        }
+        
+        [Fact]
+        public void CollectionAny()
+        {
+            int i = 2;
+            Expression<Func<Product, bool>> exp = (Product p) => p.Categories.Any(s => s == "qwe");
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("cat: qwe", _serializer.Serialize(query));
+        }
+
+        [Fact]
+        public void CollectionAnyWithoutPredicate()
+        {
+            int i = 2;
+            Expression<Func<Product, bool>> exp = (Product p) => p.Categories.Any();
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("cat:[* TO *]", _serializer.Serialize(query));
+        }
+
+        [Fact]
+        public void CollectionContains()
+        {
+            int i = 2;
+            Expression<Func<Product, bool>> exp = (Product p) => p.Categories.Contains("qwe");
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("cat: qwe", _serializer.Serialize(query));
         }
     }
 }
