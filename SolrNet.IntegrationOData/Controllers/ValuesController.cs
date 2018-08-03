@@ -13,15 +13,22 @@ namespace SolrNet.IntegrationOData.Controllers
     [ApiController]
     public class ValuesController : ControllerBase
     {
+        public ISolrOperations<Product> Solr { get; }
+
+        public ValuesController(ISolrOperations<Product> solr)
+        {
+            Solr = solr ?? throw new ArgumentNullException(nameof(solr));
+        }
         // GET api/values
         [HttpGet]
         public IActionResult Get()
         {
             return this.Ok(new string[]
             {
-                "http://localhost:64623/api/values/1?$filter=price gt 100&$orderby=Popularity desc&$top=3&$skip=1",
-                "http://localhost:64623/api/values/1?$filter=Popularity ne null",
-                "http://localhost:64623/api/values/1?$filter=Popularity eq null",
+                "http://localhost:61452/api/values/1?$filter=price gt 100&$orderby=Popularity desc&$top=3&$skip=1",
+                "http://localhost:61452/api/values/1?$filter=Popularity ne null",
+                "http://localhost:61452/api/values/1?$filter=Popularity eq null",
+                "http://localhost:61452/api/values/1?$filter=Categories/any(c: c eq 'electronics')",
             });
         }
 
@@ -29,7 +36,7 @@ namespace SolrNet.IntegrationOData.Controllers
         [HttpGet("{id}")]
         public ActionResult<string> Get(int id, ODataQueryOptions odata)
         {
-            return this.Ok(Product.SolrOperations.Value.AsQuerable().OData().ApplyQueryOptionsWithoutSelectExpand(odata).ToSolrQueryResults());
+            return this.Ok(this.Solr.AsQuerable().OData().ApplyQueryOptionsWithoutSelectExpand(odata).ToSolrQueryResults());
         }
 
         // POST api/values

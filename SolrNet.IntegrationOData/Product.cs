@@ -36,13 +36,5 @@ namespace SolrNet.IntegrationOData
 
         [SolrField("inStock_b")]
         public bool InStock { get; set; }
-
-        public static Lazy<ISolrOperations<Product>> SolrOperations = new Lazy<ISolrOperations<Product>>(() =>
-        {
-            IServiceCollection services = new ServiceCollection();
-            services.AddSolrNet("http://localhost:8983/solr/demo");
-
-            return services.BuildServiceProvider().GetRequiredService<ISolrOperations<Product>>();
-        }, LazyThreadSafetyMode.ExecutionAndPublication);
     }
 }
