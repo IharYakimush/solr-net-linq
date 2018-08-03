@@ -106,6 +106,19 @@ namespace SolrNet.Linq.Expressions
             }
 
             return false;
-        }        
+        }
+
+        public static ISolrQuery CreateNotSolrQuery(this ISolrQuery operand)
+        {
+            if (operand is SolrMultipleCriteriaQuery notQuery)
+            {
+                if (notQuery.Oper == "NOT")
+                {
+                    return notQuery.Queries.ElementAt(1);
+                }
+            }
+
+            return new SolrMultipleCriteriaQuery(new[] { SolrQuery.All, operand }, "NOT");
+        }
     }
 }

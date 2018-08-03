@@ -113,6 +113,15 @@ namespace SolrNet.Linq.Tests
         }
 
         [Fact]
+        public void NotEqualValueReverse()
+        {
+            Expression<Func<Product, bool>> exp = (Product p) => "qwe" != p.Id;
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("(*:* NOT id:(qwe))", _serializer.Serialize(query));
+        }
+
+        [Fact]
         public void NotEqualNull()
         {
             Expression<Func<Product, bool>> exp = (Product p) => p.Id != null;

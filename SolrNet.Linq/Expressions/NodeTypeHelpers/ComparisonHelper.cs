@@ -1,0 +1,58 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+
+namespace SolrNet.Linq.Expressions
+{
+    public static class ComparisonHelper
+    {
+        public static ISolrQuery HandleComparison(this BinaryExpression binaryExpression, Type type)
+        {
+            var nodeType = binaryExpression.NodeType;
+            var memberToLeft = binaryExpression.MemberToLeft(type);
+
+            if (memberToLeft.Item1 is ConditionalExpression ce)
+            {
+                Expression CompareBuilder(Expression exp)
+                {
+                    switch (binaryExpression.NodeType)
+                    {
+                        case ExpressionType.GreaterThan: return Expression.GreaterThan(exp, memberToLeft.Item2);
+                        case ExpressionType.GreaterThanOrEqual: return Expression.GreaterThanOrEqual(exp, memberToLeft.Item2);
+                        case ExpressionType.LessThan: return Expression.LessThan(exp, memberToLeft.Item2);
+                        case ExpressionType.LessThanOrEqual: return Expression.LessThanOrEqual(exp, memberToLeft.Item2);
+                    }
+
+                    throw new NotSupportedException();
+                }
+
+                return ce.ConditionalQuery(CompareBuilder, CompareBuilder, type);
+            }
+
+            KeyValuePair<string, string> kvp = memberToLeft.MemberValue(type);
+            string from = null;
+            string to = null;
+            bool directGreater = (nodeType == ExpressionType.GreaterThan ||
+                                  nodeType == ExpressionType.GreaterThanOrEqual) &&
+                                 !memberToLeft.Item3;
+
+            bool reverseGreater = (nodeType == ExpressionType.LessThan ||
+                                   nodeType == ExpressionType.LessThanOrEqual) &&
+                                  memberToLeft.Item3;
+
+            if (directGreater || reverseGreater)
+            {
+                from = kvp.Value;
+            }
+            else
+            {
+                to = kvp.Value;
+            }
+
+            bool inc = nodeType == ExpressionType.GreaterThanOrEqual ||
+                       nodeType == ExpressionType.LessThanOrEqual;
+
+            return new SolrQueryByRange<string>(kvp.Key, from, to, inc);
+        }
+    }
+}
