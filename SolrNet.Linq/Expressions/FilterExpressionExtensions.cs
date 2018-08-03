@@ -12,6 +12,12 @@ namespace SolrNet.Linq.Expressions
             expression = expression.HandleConversion();
             ExpressionType nodeType = expression.NodeType;
 
+            // No member access, try to calculate constant expression
+            if (!expression.HasMemberAccess(type))
+            {
+                return ConstantToConstant(expression, Expression.Constant(true), (a, b) => (bool)a == (bool)b);
+            }
+
             if (expression is BinaryExpression binaryExpression)
             {
                 switch (nodeType)
@@ -36,7 +42,7 @@ namespace SolrNet.Linq.Expressions
 
                     case ExpressionType.NotEqual:
                     {
-                        Tuple<MemberExpression, Expression, bool> memberToLeft = binaryExpression.MemberToLeft(type);
+                        Tuple<Expression, Expression, bool> memberToLeft = binaryExpression.MemberToLeft(type);
                         KeyValuePair<string, string> kvp = memberToLeft.MemberValue(type);
 
                         return kvp.Value == null
@@ -50,17 +56,26 @@ namespace SolrNet.Linq.Expressions
                     case ExpressionType.LessThan:
                     case ExpressionType.LessThanOrEqual:
                     {
-                        Tuple<MemberExpression, Expression, bool> memberToLeft;
-                        try
-                        {
-                            memberToLeft = binaryExpression.MemberToLeft(type);
-                        }
-                        // No member access, try to calculate constant expression
-                        catch (InvalidOperationException)
-                        {
-                            throw;
-                        }
+                        var memberToLeft = binaryExpression.MemberToLeft(type);
 
+                        if (memberToLeft.Item1 is ConditionalExpression ce)
+                        {
+                            Expression CompareBuilder(Expression exp)
+                            {
+                                switch (binaryExpression.NodeType)
+                                {
+                                    case ExpressionType.GreaterThan: return Expression.GreaterThan(exp, memberToLeft.Item2);
+                                    case ExpressionType.GreaterThanOrEqual: return Expression.GreaterThanOrEqual(exp, memberToLeft.Item2);
+                                    case ExpressionType.LessThan: return Expression.LessThan(exp, memberToLeft.Item2);
+                                    case ExpressionType.LessThanOrEqual: return Expression.LessThanOrEqual(exp, memberToLeft.Item2);
+                                }
+
+                                throw new NotSupportedException();
+                            }
+
+                            return Conditional(ce, CompareBuilder, CompareBuilder, type);
+                        }
+                        
                         KeyValuePair<string, string> kvp = memberToLeft.MemberValue(type);
                         string from = null;
                         string to = null;
@@ -115,22 +130,15 @@ namespace SolrNet.Linq.Expressions
                     return new SolrQueryByField(expression.GetSolrMemberProduct(type),
                         Expression.Constant(true).GetSolrMemberProduct(type));
                 }
-                else
-                {
-                    // try to calculate
-                    return ConstantToConstant(expression, Expression.Constant(true), (a, b) => (bool)a == (bool)b);
-                }
-            }
 
-            if (expression is ConstantExpression constantExpression)
-            {
+                // try to calculate values
                 return ConstantToConstant(expression, Expression.Constant(true), (a, b) => (bool)a == (bool)b);
-            }
+            }            
 
             if (expression is ConditionalExpression conditionalExpression)
             {
                 return Conditional(conditionalExpression, t => t, f => f, type);
-            }
+            }            
 
             throw new InvalidOperationException(
                 $"Node type {nodeType} not supported in filter query");
@@ -138,15 +146,24 @@ namespace SolrNet.Linq.Expressions
 
         private static ISolrQuery ConstantToConstant(Expression a, Expression b, Func<object, object, bool> valueCheck)
         {
-            object v1 = Expression.Lambda(a).Compile().DynamicInvoke();
-            object v2 = Expression.Lambda(b).Compile().DynamicInvoke();
-
-            if (valueCheck(v1,v2))
+            try
             {
-                return SolrQuery.All;
-            }
+                object v1 = Expression.Lambda(a).Compile().DynamicInvoke();
+                object v2 = Expression.Lambda(b).Compile().DynamicInvoke();
 
-            return CreateNotSolrQuery(SolrQuery.All);
+                if (valueCheck(v1, v2))
+                {
+                    return SolrQuery.All;
+                }
+
+                return CreateNotSolrQuery(SolrQuery.All);
+            }
+            catch (Exception e)
+            {
+                throw new InvalidOperationException(
+                    $"Unable to process check for values with expressions '{a}' and '{b}'", e);
+            }
+            
         }
 
         private static ISolrQuery Conditional(ConditionalExpression expression,Func<Expression,Expression> ifTrueBuilder, Func<Expression, Expression> ifFalseBuilder, Type type)
@@ -221,31 +238,31 @@ namespace SolrNet.Linq.Expressions
             return new SolrMultipleCriteriaQuery(new[] {SolrQuery.All, operand}, "NOT");
         }
 
-        public static Tuple<MemberExpression, Expression, bool> MemberToLeft(this BinaryExpression expression, Type type)
+        public static Tuple<Expression, Expression, bool> MemberToLeft(this BinaryExpression expression, Type type)
         {
             return MemberToLeft(expression.Left, expression.Right, type);
         }
 
-        public static Tuple<MemberExpression, Expression, bool> MemberToLeft(Expression l, Expression r, Type type)
+        public static Tuple<Expression, Expression, bool> MemberToLeft(Expression l, Expression r, Type type)
         {
             Expression a = l.HandleConversion();
             Expression b = r.HandleConversion();
 
-            if (a is MemberExpression am && am.Member.DeclaringType == type)
+            if (a.HasMemberAccess(type))
             {
-                return new Tuple<MemberExpression, Expression, bool>(am, b, false);
+                return new Tuple<Expression, Expression, bool>(a, b, false);
             }
 
-            if (b is MemberExpression bm && bm.Member.DeclaringType == type)
+            if (b.HasMemberAccess(type))
             {
-                return new Tuple<MemberExpression, Expression, bool>(bm, a, true);
+                return new Tuple<Expression, Expression, bool>(b, a, true);
             }
 
             throw new InvalidOperationException(
                 $"Access to member of type '{type}' not found in both '{a}' and '{b}'.");
         }
 
-        public static KeyValuePair<string, string> MemberValue(this Tuple<MemberExpression, Expression, bool> member, Type type)
+        public static KeyValuePair<string, string> MemberValue(this Tuple<Expression, Expression, bool> member, Type type)
         {
             string key = member.Item1.GetSolrMemberProduct(type, true);
             string dynamicInvoke;

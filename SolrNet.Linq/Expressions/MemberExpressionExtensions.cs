@@ -53,14 +53,22 @@ namespace SolrNet.Linq.Expressions
             {
                 exp = exp.HandleConversion();
 
-                if (exp is MemberExpression lambdaExp)
+                if (exp is MemberExpression me)
                 {
-                    MemberInfo memberInfo = lambdaExp.Member;
+                    MemberInfo memberInfo = me.Member;
 
                     if (memberInfo.DeclaringType == type)
                     {
                         return memberInfo.GetMemberSolrName();
-                    }                    
+                    }
+
+                    if (me.Member.DeclaringType != null &&
+                        me.Member.DeclaringType.IsGenericType &&
+                        me.Member.DeclaringType.Name.StartsWith(nameof(Nullable)) &&
+                        me.Member.Name == nameof(Nullable<int>.Value)) // int may be replaced to any other type
+                    {
+                        return me.Expression.GetSolrMemberProduct(type);
+                    }
                 }
 
                 if (!disableFunctions && exp is BinaryExpression bin)
@@ -71,13 +79,16 @@ namespace SolrNet.Linq.Expressions
                     }
                 }
 
-                if (!disableFunctions && exp is MethodCallExpression call)
+                if (exp is MethodCallExpression call)
                 {
-                    string key = call.Method.DeclaringType.FullName + call.Method.Name;
-                    if (CallHelper.ContainsKey(key))
+                    if (!disableFunctions)
                     {
-                        return CallHelper[key].Invoke(call, type);
-                    }
+                        string key = call.Method.DeclaringType.FullName + call.Method.Name;
+                        if (CallHelper.ContainsKey(key))
+                        {
+                            return CallHelper[key].Invoke(call, type);
+                        }
+                    }                    
                 }
 
                 // Access to member of other type can't be translated, so assume it should be used as a value

@@ -202,5 +202,14 @@ namespace SolrNet.Linq.Tests
 
             Assert.Equal("(popularity:[* TO *] OR ((*:* NOT popularity:[* TO *]) AND inStock_b:(true)))", _serializer.Serialize(query));
         }
+
+        [Fact]
+        public void ConditionalLessThanTestMemberTrueMemberFalseMember()
+        {
+            Expression<Func<Product, bool>> exp = (Product p) => (p.Popularity != null ? p.Popularity.Value : p.Price) > 7;
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("((popularity:[* TO *] AND popularity:{7 TO *}) OR ((*:* NOT popularity:[* TO *]) AND price:{7 TO *}))", _serializer.Serialize(query));
+        }
     }
 }
