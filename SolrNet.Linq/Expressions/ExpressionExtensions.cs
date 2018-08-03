@@ -66,7 +66,7 @@ namespace SolrNet.Linq.Expressions
 
             if (expression is MethodCallExpression mc)
             {
-                return mc.Object?.HasMemberAccess(type) ?? mc.Arguments.Any(e => e.HasMemberAccess(type));
+                return (mc.Object != null && mc.Object.HasMemberAccess(type)) || mc.Arguments.Any(e => e.HasMemberAccess(type));
             }
 
             if (expression is ConditionalExpression ce)

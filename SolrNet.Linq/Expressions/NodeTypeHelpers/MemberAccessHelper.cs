@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Linq.Expressions;
+using SolrNet.Linq.Expressions.Context;
 
 namespace SolrNet.Linq.Expressions.NodeTypeHelpers
 {
     public static class MemberAccessHelper
     {
-        public static ISolrQuery HandleMemberAccess(this MemberExpression memberExpression, Type type)
+        public static ISolrQuery HandleMemberAccess(this MemberExpression memberExpression, MemberContext context)
         {
             if (memberExpression.Type != typeof(bool))
             {
@@ -13,27 +14,27 @@ namespace SolrNet.Linq.Expressions.NodeTypeHelpers
                     $"Member '{memberExpression.Member.Name}' must be boolean to be a part of filter");
             }
 
-            if (memberExpression.Member.DeclaringType == type)
+            if (context.IsAccessToMember(memberExpression))
             {
-                return new SolrQueryByField(memberExpression.GetSolrMemberProduct(type),
-                    Expression.Constant(true).GetSolrMemberProduct(type));
+                return new SolrQueryByField(context.GetSolrMemberProduct(memberExpression, true),
+                    Expression.Constant(true).GetSolrMemberProduct(typeof(MemberAccessHelper)));
             }
 
             if (memberExpression.IsNullableMember())
             {
                 if (memberExpression.Expression.HandleConversion() is MemberExpression inner)
                 {
-                    if (inner.Member.DeclaringType == type)
+                    if (context.IsAccessToMember(inner))
                     {
                         if (memberExpression.Member.Name == nameof(Nullable<int>.HasValue))
                         {
-                            return new SolrHasValueQuery(inner.GetSolrMemberProduct(type));
+                            return new SolrHasValueQuery(context.GetSolrMemberProduct(inner));
                         }
 
                         if (memberExpression.Member.Name == nameof(Nullable<int>.Value))
                         {
-                            return new SolrQueryByField(inner.GetSolrMemberProduct(type),
-                                Expression.Constant(true).GetSolrMemberProduct(type));
+                            return new SolrQueryByField(context.GetSolrMemberProduct(inner),
+                                Expression.Constant(true).GetSolrMemberProduct(typeof(MemberAccessHelper)));
                         }
                     }
                 }

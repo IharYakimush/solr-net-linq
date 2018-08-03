@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using SolrNet.Linq.Expressions.Context;
 
 namespace SolrNet.Linq.Expressions
 {
     public static class ComparisonHelper
     {
-        public static ISolrQuery HandleComparison(this BinaryExpression binaryExpression, Type type)
+        public static ISolrQuery HandleComparison(this BinaryExpression binaryExpression, MemberContext context)
         {
             var nodeType = binaryExpression.NodeType;
-            var memberToLeft = binaryExpression.MemberToLeft(type);
+            var memberToLeft = binaryExpression.MemberToLeft(context);
 
             if (memberToLeft.Item1 is ConditionalExpression ce)
             {
@@ -26,10 +27,10 @@ namespace SolrNet.Linq.Expressions
                     throw new NotSupportedException();
                 }
 
-                return ce.ConditionalQuery(CompareBuilder, CompareBuilder, type);
+                return ce.ConditionalQuery(CompareBuilder, CompareBuilder, context);
             }
 
-            KeyValuePair<string, string> kvp = memberToLeft.MemberValue(type);
+            KeyValuePair<string, string> kvp = memberToLeft.MemberValue(context);
             string from = null;
             string to = null;
             bool directGreater = (nodeType == ExpressionType.GreaterThan ||

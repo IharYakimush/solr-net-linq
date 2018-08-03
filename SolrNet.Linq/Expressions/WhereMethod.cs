@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using SolrNet.Commands.Parameters;
+using SolrNet.Linq.Expressions.Context;
 
 namespace SolrNet.Linq.Expressions
 {
@@ -21,7 +22,7 @@ namespace SolrNet.Linq.Expressions
                     LambdaExpression lambda = (LambdaExpression)node.Arguments[1].StripQuotes();
                     Expression whereMember = lambda.Body;
 
-                    ISolrQuery filter = whereMember.GetSolrFilterQuery(type);
+                    ISolrQuery filter = whereMember.GetSolrFilterQuery(MemberContext.ForType(type));
                     options.FilterQueries.Add(filter);
                 }
                 else

@@ -2,19 +2,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using SolrNet.Linq.Expressions.Context;
 using SolrNet.Linq.Expressions.NodeTypeHelpers;
 
 namespace SolrNet.Linq.Expressions
 {
     public static class FilterExpressionExtensions
     {
-        public static ISolrQuery GetSolrFilterQuery(this Expression expression, Type type)
+        public static ISolrQuery GetSolrFilterQuery(this Expression expression, MemberContext context)
         {
             expression = expression.HandleConversion();
             ExpressionType nodeType = expression.NodeType;
 
             // No member access, try to calculate constant expression
-            if (!expression.HasMemberAccess(type))
+            if (!context.HasMemberAccess(expression))
             {
                 return ConstantToConstant(expression, Expression.Constant(true), (a, b) => (bool)a == (bool)b);
             }
@@ -25,8 +26,8 @@ namespace SolrNet.Linq.Expressions
                 {
                     case ExpressionType.AndAlso:
                     {
-                        ISolrQuery left = GetSolrFilterQuery(binaryExpression.Left, type);
-                        ISolrQuery right = GetSolrFilterQuery(binaryExpression.Right, type);
+                        ISolrQuery left = GetSolrFilterQuery(binaryExpression.Left, context);
+                        ISolrQuery right = GetSolrFilterQuery(binaryExpression.Right, context);
 
                         string op = SolrMultipleCriteriaQuery.Operator.AND;
                         return GetMultipleCriteriaQuery(left, right, op);                        
@@ -34,8 +35,8 @@ namespace SolrNet.Linq.Expressions
 
                     case ExpressionType.OrElse:
                     {
-                        ISolrQuery left = GetSolrFilterQuery(binaryExpression.Left, type);
-                        ISolrQuery right = GetSolrFilterQuery(binaryExpression.Right, type);
+                        ISolrQuery left = GetSolrFilterQuery(binaryExpression.Left, context);
+                        ISolrQuery right = GetSolrFilterQuery(binaryExpression.Right, context);
 
                         string op = SolrMultipleCriteriaQuery.Operator.OR;
                         return GetMultipleCriteriaQuery(left, right, op);
@@ -43,13 +44,13 @@ namespace SolrNet.Linq.Expressions
 
                     case ExpressionType.Equal:
                     {
-                        return binaryExpression.HandleEqual(type);
+                        return binaryExpression.HandleEqual(context);
                     }
 
                     case ExpressionType.NotEqual:
                     {
-                        Tuple<Expression, Expression, bool> memberToLeft = binaryExpression.MemberToLeft(type);
-                        KeyValuePair<string, string> kvp = memberToLeft.MemberValue(type);
+                        Tuple<Expression, Expression, bool> memberToLeft = binaryExpression.MemberToLeft(context);
+                        KeyValuePair<string, string> kvp = memberToLeft.MemberValue(context);
 
                         return kvp.Value == null
                             ? new SolrHasValueQuery(kvp.Key)
@@ -62,7 +63,7 @@ namespace SolrNet.Linq.Expressions
                     case ExpressionType.LessThan:
                     case ExpressionType.LessThanOrEqual:
                     {
-                        return binaryExpression.HandleComparison(type);
+                        return binaryExpression.HandleComparison(context);
                     }
                 }
             }
@@ -73,7 +74,7 @@ namespace SolrNet.Linq.Expressions
                 {
                     case ExpressionType.Not:
                     {
-                        ISolrQuery operand = GetSolrFilterQuery(unaryExpression.Operand, type);
+                        ISolrQuery operand = GetSolrFilterQuery(unaryExpression.Operand, context);
                         ISolrQuery result = operand.CreateNotSolrQuery();
                         return result;
                     }                    
@@ -82,17 +83,17 @@ namespace SolrNet.Linq.Expressions
 
             if (expression is MethodCallExpression methodCallExpression)
             {
-                return methodCallExpression.HandleMethodCall(type);
+                return methodCallExpression.HandleMethodCall(context);
             }
 
             if (expression is MemberExpression memberExpression)
             {
-                return memberExpression.HandleMemberAccess(type);
+                return memberExpression.HandleMemberAccess(context);
             }            
 
             if (expression is ConditionalExpression conditionalExpression)
             {
-                return ConditionalQuery(conditionalExpression, t => t, f => f, type);
+                return ConditionalQuery(conditionalExpression, t => t, f => f, context);
             }
 
             throw new InvalidOperationException(
@@ -120,13 +121,17 @@ namespace SolrNet.Linq.Expressions
             }
             
         }
-        public static ISolrQuery ConditionalQuery(this ConditionalExpression expression, Func<Expression,Expression> ifTrueBuilder, Func<Expression, Expression> ifFalseBuilder, Type type)
+        public static ISolrQuery ConditionalQuery(
+            this ConditionalExpression expression, 
+            Func<Expression,Expression> ifTrueBuilder, 
+            Func<Expression, Expression> ifFalseBuilder, 
+            MemberContext context)
         {
-            ISolrQuery testPositive = expression.Test.GetSolrFilterQuery(type);
-            ISolrQuery trueCase = ifTrueBuilder(expression.IfTrue).GetSolrFilterQuery(type);
+            ISolrQuery testPositive = expression.Test.GetSolrFilterQuery(context);
+            ISolrQuery trueCase = ifTrueBuilder(expression.IfTrue).GetSolrFilterQuery(context);
 
             ISolrQuery testNegative = testPositive.CreateNotSolrQuery();
-            ISolrQuery falseCase = ifFalseBuilder(expression.IfFalse).GetSolrFilterQuery(type);
+            ISolrQuery falseCase = ifFalseBuilder(expression.IfFalse).GetSolrFilterQuery(context);
 
             return GetMultipleCriteriaQuery(
                 GetMultipleCriteriaQuery(testPositive, trueCase, SolrMultipleCriteriaQuery.Operator.AND),
@@ -179,38 +184,38 @@ namespace SolrNet.Linq.Expressions
             return new SolrMultipleCriteriaQuery(queries, criteriaOperator).TrySimplify();
         }
 
-        internal static Tuple<Expression, Expression, bool> MemberToLeft(this BinaryExpression expression, Type type)
+        internal static Tuple<Expression, Expression, bool> MemberToLeft(this BinaryExpression expression, MemberContext context)
         {
-            return MemberToLeft(expression.Left, expression.Right, type);
+            return MemberToLeft(expression.Left, expression.Right, context);
         }
 
-        public static Tuple<Expression, Expression, bool> MemberToLeft(Expression l, Expression r, Type type)
+        public static Tuple<Expression, Expression, bool> MemberToLeft(Expression l, Expression r, MemberContext context)
         {
             Expression a = l.HandleConversion();
             Expression b = r.HandleConversion();
 
-            if (a.HasMemberAccess(type))
+            if (context.HasMemberAccess(a))
             {
                 return new Tuple<Expression, Expression, bool>(a, b, false);
             }
 
-            if (b.HasMemberAccess(type))
+            if (context.HasMemberAccess(b))
             {
                 return new Tuple<Expression, Expression, bool>(b, a, true);
             }
 
             throw new InvalidOperationException(
-                $"Access to member of type '{type}' not found in both '{a}' and '{b}'.");
+                $"Access to member in context '{context}' not found for both '{a}' and '{b}'.");
         }
 
-        public static KeyValuePair<string, string> MemberValue(this Tuple<Expression, Expression, bool> member, Type type)
+        public static KeyValuePair<string, string> MemberValue(this Tuple<Expression, Expression, bool> member, MemberContext context)
         {
-            string key = member.Item1.GetSolrMemberProduct(type, true);
+            string key = context.GetSolrMemberProduct(member.Item1, true);
             string dynamicInvoke;
 
             try
             {
-                dynamicInvoke = member.Item2.GetSolrMemberProduct(type, true);
+                dynamicInvoke = context.GetSolrMemberProduct(member.Item2, true);
             }
             catch (Exception e)
             {

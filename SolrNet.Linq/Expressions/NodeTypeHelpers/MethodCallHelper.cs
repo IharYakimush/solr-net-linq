@@ -2,17 +2,18 @@
 using System.Collections;
 using System.Linq;
 using System.Linq.Expressions;
+using SolrNet.Linq.Expressions.Context;
 
 namespace SolrNet.Linq.Expressions.NodeTypeHelpers
 {
     public static class MethodCallHelper
     {
-        public static ISolrQuery HandleMethodCall(this MethodCallExpression mce, Type type)
+        public static ISolrQuery HandleMethodCall(this MethodCallExpression mce, MemberContext context)
         {
             if ((mce.Method.DeclaringType == typeof(Queryable) || mce.Method.DeclaringType == typeof(Enumerable)) &&
                 mce.Method.Name == nameof(Queryable.Any))
             {
-                string field = mce.Arguments[0].GetSolrMemberProduct(type);
+                string field = context.GetSolrMemberProduct(mce.Arguments[0]);
 
                 if (mce.Arguments.Count == 1)
                 {
@@ -21,11 +22,9 @@ namespace SolrNet.Linq.Expressions.NodeTypeHelpers
 
                 if (mce.Arguments.Count == 2)
                 {
-                    Type[] interfaces = mce.Arguments[0].Type.GetInterfaces();
-                    Type ienumerable = interfaces.First(intf =>
-                        intf.IsGenericType && intf.Name.StartsWith(nameof(IEnumerable)));
+                    LambdaExpression lambda = (LambdaExpression) mce.Arguments[1];
 
-                    Type elemenType = ienumerable.GetGenericArguments().Single();
+                    return lambda.Body.GetSolrFilterQuery(MemberContext.ForLambda(lambda, field));
                 }
             }
 
@@ -38,10 +37,10 @@ namespace SolrNet.Linq.Expressions.NodeTypeHelpers
                     Expression arg2 = mce.Object == null ? mce.Arguments[1] : mce.Arguments[0];
 
                     // Consider array member equal
-                    if (obj.HasMemberAccess(type))
+                    if (context.HasMemberAccess(obj))
                     {
-                        return new SolrQueryByField(obj.GetSolrMemberProduct(type, true),
-                            arg2.GetSolrMemberProduct(type, true));
+                        return new SolrQueryByField(context.GetSolrMemberProduct(obj, true),
+                            context.GetSolrMemberProduct(arg2, true));
                     }
 
                     // Consider in list query
@@ -56,7 +55,7 @@ namespace SolrNet.Linq.Expressions.NodeTypeHelpers
                             $"Unable to get IEnumerable from '{obj}' expression.", e);
                     }
 
-                    return new SolrQueryInList(arg2.GetSolrMemberProduct(type, true),
+                    return new SolrQueryInList(context.GetSolrMemberProduct(arg2, true),
                         list.OfType<object>().Select(o => o.SerializeToSolr()));
                 }
             }
