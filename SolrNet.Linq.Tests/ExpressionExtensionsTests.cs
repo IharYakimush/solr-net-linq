@@ -15,5 +15,14 @@ namespace SolrNet.Linq.Tests
 
             Assert.True(result);
         }
+
+        [Fact]
+        public void HasMemberNullableHasValue()
+        {
+            Expression<Func<Product, bool>> exp = (Product p) => p.Popularity.HasValue;
+            bool result = exp.Body.HasMemberAccess(typeof(Product));
+
+            Assert.True(result);
+        }
     }
 }

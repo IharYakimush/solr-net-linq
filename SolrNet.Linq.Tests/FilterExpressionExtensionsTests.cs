@@ -211,5 +211,23 @@ namespace SolrNet.Linq.Tests
 
             Assert.Equal("(popularity:{7 TO *} OR ((*:* NOT popularity:[* TO *]) AND price:{7 TO *}))", _serializer.Serialize(query));
         }
+
+        [Fact]
+        public void NullableHasValue()
+        {
+            Expression<Func<Product, bool>> exp = (Product p) => p.Popularity.HasValue;
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("popularity:[* TO *]", _serializer.Serialize(query));
+        }
+
+        [Fact]
+        public void NullableNotHasValue()
+        {
+            Expression<Func<Product, bool>> exp = (Product p) => !p.Popularity.HasValue;
+            ISolrQuery query = ((LambdaExpression)exp).Body.GetSolrFilterQuery(typeof(Product));
+
+            Assert.Equal("(*:* NOT popularity:[* TO *])", _serializer.Serialize(query));
+        }
     }
 }

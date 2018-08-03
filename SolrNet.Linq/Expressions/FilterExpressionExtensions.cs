@@ -131,6 +131,26 @@ namespace SolrNet.Linq.Expressions
                         Expression.Constant(true).GetSolrMemberProduct(type));
                 }
 
+                if (memberExpression.IsNullableMember())
+                {
+                    if (memberExpression.Expression.HandleConversion() is MemberExpression inner)
+                    {
+                        if (inner.Member.DeclaringType == type)
+                        {
+                            if (memberExpression.Member.Name == nameof(Nullable<int>.HasValue))
+                            {
+                                return new SolrHasValueQuery(inner.GetSolrMemberProduct(type));
+                            }
+
+                            if (memberExpression.Member.Name == nameof(Nullable<int>.Value))
+                            {
+                                return new SolrQueryByField(inner.GetSolrMemberProduct(type),
+                                    Expression.Constant(true).GetSolrMemberProduct(type));
+                            }
+                        }
+                    }                    
+                }
+
                 // try to calculate values
                 return ConstantToConstant(expression, Expression.Constant(true), (a, b) => (bool)a == (bool)b);
             }            

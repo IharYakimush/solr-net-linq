@@ -28,6 +28,14 @@ namespace SolrNet.Linq.Expressions
             return expression;
         }
 
+        internal static bool IsNullableMember(this MemberExpression me)
+        {
+            return me.Member.DeclaringType != null &&
+                   me.Member.DeclaringType.IsGenericType &&
+                   (me.Member.DeclaringType.Name.StartsWith("Nullable") ||
+                    me.Member.DeclaringType.Name.StartsWith("System.Nullable"));
+        }
+
         public static bool HasMemberAccess(this Expression expression, Type type)
         {
             expression = expression.HandleConversion();
@@ -39,9 +47,7 @@ namespace SolrNet.Linq.Expressions
                     return true;
                 }
 
-                if (me.Member.DeclaringType != null && 
-                    me.Member.DeclaringType.IsGenericType &&
-                    me.Member.DeclaringType.Name.StartsWith(nameof(Nullable)))
+                if (me.IsNullableMember())
                 {
                     return me.Expression.HasMemberAccess(type);
                 }
