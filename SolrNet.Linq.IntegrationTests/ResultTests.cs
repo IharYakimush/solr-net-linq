@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace SolrNet.Linq.IntegrationOData
+namespace SolrNet.Linq.IntegrationTests
 {
     public class ResultTests
     {

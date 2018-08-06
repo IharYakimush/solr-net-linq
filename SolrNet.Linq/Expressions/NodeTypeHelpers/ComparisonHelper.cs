@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using SolrNet.Linq.Expressions.Context;
 
-namespace SolrNet.Linq.Expressions
+namespace SolrNet.Linq.Expressions.NodeTypeHelpers
 {
     public static class ComparisonHelper
     {

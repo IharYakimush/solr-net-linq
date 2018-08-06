@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.Http.Headers;
 using System.Runtime.Serialization;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using SolrNet.Attributes;
-using SolrNet.Mapping;
 
-namespace SolrNet.Linq.IntegrationOData
+namespace SolrNet.Linq.IntegrationTests
 {
     public class Product
     {

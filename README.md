@@ -61,7 +61,6 @@ IQueryable<Product> solrLinq = solr.AsQueryable(setup =>
 
 ## Supported methods
 
-### Top, Skip
 ### OrderBy, OrderByDescending, ThenBy, ThenByDescending
   - Order by field
  ```
@@ -103,5 +102,8 @@ IQueryable<Product> solrLinq = solr.AsQueryable(setup =>
   // cat:(qwe)
   Product[] result = solrLinq.Where(p => p.Categories.Any(s => s == "qwe")).ToArray();
   ```
+  ### Top, Skip
+  ### First(), FirstAsync(), FirstOrDefault(), FirstOrDefaultAsync()
+  ### Single(), SingleAsync(), SingleOrDefault(), SingleOrDefaultAsync()
 ## Nuget
 https://www.nuget.org/packages/SolrNet.Linq

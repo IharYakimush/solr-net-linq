@@ -12,12 +12,16 @@
     <PackageTags>solr solrnet linq</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>1.1.0</Version>
-    <PackageReleaseNotes>ability to customize field serializer and mapping manager</PackageReleaseNotes>
+    <Version>1.2.0</Version>
+    <PackageReleaseNotes>support First(), FirstOrDefault(). Single(), SingleOrDefault() methods</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="SolrNet.Core" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Providers\" />
   </ItemGroup>
 
 </Project>

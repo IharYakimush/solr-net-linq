@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using Xunit;
 
-namespace SolrNet.Linq.IntegrationOData
+namespace SolrNet.Linq.IntegrationTests
 {
     public class TakeSkipTests
     {

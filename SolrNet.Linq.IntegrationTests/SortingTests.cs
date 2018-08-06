@@ -2,7 +2,7 @@
 using System.Linq;
 using Xunit;
 
-namespace SolrNet.Linq.IntegrationOData
+namespace SolrNet.Linq.IntegrationTests
 {
     public class SortingTests
     {

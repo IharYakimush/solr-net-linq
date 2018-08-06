@@ -4,6 +4,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using SolrNet.Commands.Parameters;
+using SolrNet.Linq.Expressions;
+using SolrNet.Linq.Expressions.Context;
 
 namespace SolrNet.Linq
 {
@@ -39,6 +41,8 @@ namespace SolrNet.Linq
         {
             if (typeof(TEntity) == typeof(TElement))
             {
+                
+
                 return new SolrQuery<TElement>(this as SolrQueryProvider<TElement>, expression);
             }
             
@@ -47,15 +51,38 @@ namespace SolrNet.Linq
 
         public object Execute(Expression expression)
         {
-            SolrQueryTranslator<TEntity> translator = new SolrQueryTranslator<TEntity>(this.Options);
-            Tuple<ISolrQuery, QueryOptions> result = translator.Translate(this, expression);
+            SolrQueryTranslator translator = new SolrQueryTranslator(this.Options, this.MemberContext);
+            Tuple<ISolrQuery, QueryOptions, EnumeratedResult> result = translator.Translate(this, expression);
             this.Options.SetupQueryOptions?.Invoke(result.Item2);
-            return Operations.Query(this.Options.MainQuery ?? result.Item1, result.Item2);
+            SolrQueryResults<TEntity> solrQueryResults =
+                Operations.Query(this.Options.MainQuery ?? result.Item1, result.Item2);
+
+            switch (result.Item3)
+            {
+                case EnumeratedResult.First: return solrQueryResults.First();
+                case EnumeratedResult.FirstOrDefault: return solrQueryResults.FirstOrDefault();
+                case EnumeratedResult.Single: return solrQueryResults.Single();
+                case EnumeratedResult.SingleOrDefault: return solrQueryResults.SingleOrDefault();
+
+                default: return solrQueryResults;
+            }
+        }
+
+        public MemberContext MemberContext
+        {
+            get
+            {
+                MemberContext memberContext = MemberContext.ForType<TEntity>();
+                memberContext.FieldSerializer = this.Options.SolrFieldSerializer;
+                memberContext.MappingManager = this.Options.MappingManager;
+                return memberContext;
+            }
         }
 
         public Task<SolrQueryResults<TEntity>> ExecuteAsync(Expression expression)
         {
-            SolrQueryTranslator<TEntity> translator = new SolrQueryTranslator<TEntity>(this.Options);
+            SolrQueryTranslator
+                translator = new SolrQueryTranslator(this.Options, this.MemberContext);
             var result = translator.Translate(this, expression);
             this.Options.SetupQueryOptions?.Invoke(result.Item2);
             
@@ -83,6 +110,6 @@ namespace SolrNet.Linq
             }
 
             return result;
-        }
+        }        
     }
 }
