@@ -4,13 +4,17 @@ using System.Linq.Expressions;
 using SolrNet.Impl;
 using SolrNet.Impl.FieldParsers;
 using SolrNet.Impl.FieldSerializers;
+using SolrNet.Mapping;
 
 namespace SolrNet.Linq.Expressions.Context
 {
     public abstract class MemberContext
     {        
         private static readonly DefaultFieldSerializer DefaultFieldSerializer = new DefaultFieldSerializer();
+        private static IReadOnlyMappingManager DefaultMappingManager { get; } = new AttributesMappingManager();
+
         private ISolrFieldSerializer _fieldSerializer;
+        private IReadOnlyMappingManager _mappingManager;
         public abstract bool HasMemberAccess(Expression expression);
 
         public abstract string GetSolrMemberProduct(Expression expression, bool disableFunctions = false);
@@ -42,5 +46,11 @@ namespace SolrNet.Linq.Expressions.Context
             get => _fieldSerializer ?? DefaultFieldSerializer;
             set => _fieldSerializer = value;
         }
+
+        public IReadOnlyMappingManager MappingManager
+        {
+            get => _mappingManager ?? DefaultMappingManager;
+            set => _mappingManager = value;
+        }        
     }
 }

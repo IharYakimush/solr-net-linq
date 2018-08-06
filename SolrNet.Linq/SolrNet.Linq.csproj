@@ -13,7 +13,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Version>1.1.0</Version>
-    <PackageReleaseNotes>ability to customize field serializer</PackageReleaseNotes>
+    <PackageReleaseNotes>ability to customize field serializer and mapping manager</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

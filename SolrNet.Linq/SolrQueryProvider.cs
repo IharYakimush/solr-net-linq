@@ -58,6 +58,7 @@ namespace SolrNet.Linq
             SolrQueryTranslator<TEntity> translator = new SolrQueryTranslator<TEntity>(this.Options);
             var result = translator.Translate(this, expression);
             this.Options.SetupQueryOptions?.Invoke(result.Item2);
+            
             return Operations.QueryAsync(this.Options.MainQuery ?? result.Item1, result.Item2);
         }
 

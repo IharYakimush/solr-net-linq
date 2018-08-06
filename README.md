@@ -3,7 +3,7 @@ SolrNet IQueryable provider. Extend SolrNet functionality by adding limited LINQ
 
 ## Code Sample
 ### Prerequisites
-To use LINQ with SolrNet you need to have `ISolrOperations<TEntity>` or even `ISolrBasicReadOnlyOperations<TEntity>` where `TEntity` is a type with properties marked with `SolrField` attribute. For instance 
+To use LINQ with SolrNet you need to have `ISolrOperations<TEntity>` or even `ISolrBasicReadOnlyOperations<TEntity>`. By default `TEntity` should be a type with properties marked with `SolrField` attribute, however it is not mandatory if you going to set another mapping manager when initializing a query. For instance 
 ```
 public class Product
 {
@@ -40,7 +40,7 @@ It is possible to combine linq and regular SolrNet QueryOptions and main query. 
 IQueryable<Product> solrLinq = solr.AsQueryable(setup =>
 {
     // Set q parameter. By default *:* will be used.
-	// LINQ Where method append fq (Filter Query) to query options and not affect main query
+    // LINQ Where method append fq (Filter Query) to query options and not affect main query
     options.MainQuery = new SolrQuery("some query");
 
     // Configure SolrNet QueryOptions.
@@ -53,6 +53,9 @@ IQueryable<Product> solrLinq = solr.AsQueryable(setup =>
 
     // override default serializer if needed
     options.SolrFieldSerializer = new DefaultFieldSerializer();
+
+	// override default mapping manager if needed
+    options.MappingManager = new AttributesMappingManager();
 });
 ```
 

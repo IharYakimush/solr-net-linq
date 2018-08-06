@@ -30,18 +30,20 @@ namespace SolrNet.Linq.Expressions
 
         private static readonly ConcurrentDictionary<MemberInfo, string> MemberNames = new ConcurrentDictionary<MemberInfo, string>();
 
-        public static string GetMemberSolrName(this MemberInfo info)
+        private static string GetMemberSolrName(this MemberInfo info, IReadOnlyMappingManager mappingManager)
         {
             return MemberNames.GetOrAdd(info, m =>
             {
-                SolrFieldAttribute att = m.GetCustomAttributes().OfType<SolrFieldAttribute>().FirstOrDefault();
+                var att = mappingManager.GetFields(info.DeclaringType);
 
-                if (att == null)
+                SolrFieldModel value = att.Values.FirstOrDefault(f => f.Property == info as PropertyInfo);
+                if (value != null)
                 {
-                    throw new InvalidOperationException($"Unable to get solr name for {m.DeclaringType}.{m.Name}");
+                    return value.FieldName;
                 }
 
-                return att.FieldName;
+                throw new InvalidOperationException(
+                    $"Unable to get solr name for {m.DeclaringType}.{m.Name}. Mapping manager has mappings only for {string.Join(", ", att.Values.Select(f => f.Property.Name))}");
             });
         }
 
@@ -57,7 +59,7 @@ namespace SolrNet.Linq.Expressions
                     
                     if (context.IsAccessToMember(me))
                     {
-                        return memberInfo.GetMemberSolrName();
+                        return memberInfo.GetMemberSolrName(context.MappingManager);
                     }
 
                     if (me.Member.DeclaringType != null &&

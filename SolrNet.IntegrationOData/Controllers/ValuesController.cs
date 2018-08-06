@@ -7,6 +7,7 @@ using Community.OData.Linq.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using SolrNet.Impl.FieldSerializers;
 using SolrNet.Linq;
+using SolrNet.Mapping;
 
 namespace SolrNet.IntegrationOData.Controllers
 {
@@ -52,6 +53,9 @@ namespace SolrNet.IntegrationOData.Controllers
 
                 // override default serializer if needed
                 options.SolrFieldSerializer = new DefaultFieldSerializer();
+
+                // override default mapping manager if needed
+                options.MappingManager = new AttributesMappingManager();
             });
 
             return this.Ok(query.OData().ApplyQueryOptionsWithoutSelectExpand(odata).ToSolrQueryResults());

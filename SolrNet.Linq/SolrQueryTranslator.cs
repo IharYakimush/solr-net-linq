@@ -33,6 +33,7 @@ namespace SolrNet.Linq
             result |= node.TryVisitSkip(this.Options);
             MemberContext context = MemberContext.ForType<TEntity>();
             context.FieldSerializer = this.SolrNetLinqOptions.SolrFieldSerializer;
+            context.MappingManager = this.SolrNetLinqOptions.MappingManager;
 
             result |= node.TryVisitSorting(this.Options, context);
             result |= node.TryVisitWhere(this.Options, context);

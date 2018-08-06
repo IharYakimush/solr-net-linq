@@ -1,6 +1,8 @@
 ﻿using System;
 using SolrNet.Commands.Parameters;
 using SolrNet.Impl;
+using SolrNet.Impl.FieldSerializers;
+using SolrNet.Mapping;
 
 namespace SolrNet.Linq
 {
@@ -9,10 +11,24 @@ namespace SolrNet.Linq
     /// </summary>
     public class SolrNetLinqOptions
     {
+        /// <summary>
+        /// Set main query (q SOLR parameter). By default *:* will be used. LINQ Where method append fq (Filter Query) to query options and not affect main query.
+        /// </summary>
         public ISolrQuery MainQuery { get; set; } = null;
 
+        /// <summary>
+        /// Action to perform additional setup of <see cref="QueryOptions"/> SolrNet QueryOptions. Useful to set options not supported by LINQ. Will be applied after translating LINQ expression. 
+        /// </summary>
         public Action<QueryOptions> SetupQueryOptions { get; set; } = null;
 
+        /// <summary>
+        /// Set <see cref="ISolrFieldSerializer"/> field serializer. If not set <see cref="DefaultFieldSerializer"/> default SolrNet field serializer will be used.
+        /// </summary>
         public ISolrFieldSerializer SolrFieldSerializer { get; set; } = null;
+
+        /// <summary>
+        /// Set <see cref="IReadOnlyMappingManager"/> field mapping manager. If not set <see cref="AttributesMappingManager"/> attributes mapping manager will be used.
+        /// </summary>
+        public IReadOnlyMappingManager MappingManager { get; set; } = null;
     }
 }
