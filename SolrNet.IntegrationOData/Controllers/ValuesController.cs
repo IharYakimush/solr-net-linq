@@ -14,15 +14,22 @@ namespace SolrNet.IntegrationOData.Controllers
     [ApiController]
     public class ValuesController : ControllerBase
     {
+        public ISolrOperations<Product> Solr { get; }
+
+        public ValuesController(ISolrOperations<Product> solr)
+        {
+            Solr = solr ?? throw new ArgumentNullException(nameof(solr));
+        }
         // GET api/values
         [HttpGet]
         public IActionResult Get()
         {
-            return this.Ok(new string[]
+            return this.Ok(new []
             {
-                "http://localhost:64623/api/values/1?$filter=price gt 100&$orderby=Popularity desc&$top=3&$skip=1",
-                "http://localhost:64623/api/values/1?$filter=Popularity ne null",
-                "http://localhost:64623/api/values/1?$filter=Popularity eq null",
+                "/api/values/1?$filter=price gt 100&$orderby=Popularity desc&$top=3&$skip=1",
+                "/api/values/1?$filter=Popularity ne null",
+                "/api/values/1?$filter=Popularity eq null",
+                "/api/values/1?$filter=Categories/any(c: c eq 'electronics')",
             });
         }
 
@@ -30,10 +37,10 @@ namespace SolrNet.IntegrationOData.Controllers
         [HttpGet("{id}")]
         public ActionResult<string> Get(int id, ODataQueryOptions odata)
         {
-            Product.SolrOperations.Value.AsQueryable(options =>
+            SolrQuery<Product> query = this.Solr.AsQueryable(options =>
             {
                 // Set q parameter. By default *:* will be used
-                options.MainQuery = new SolrQuery("some query");
+                options.MainQuery = new SolrQuery("*:*");
 
                 // Configure SolrNet QueryOptions.
                 // This function will be called after applying query options from LINQ
@@ -46,7 +53,8 @@ namespace SolrNet.IntegrationOData.Controllers
                 // override default serializer if needed
                 options.SolrFieldSerializer = new DefaultFieldSerializer();
             });
-            return this.Ok(Product.SolrOperations.Value.AsQueryable().OData().ApplyQueryOptionsWithoutSelectExpand(odata).ToSolrQueryResults());
+
+            return this.Ok(query.OData().ApplyQueryOptionsWithoutSelectExpand(odata).ToSolrQueryResults());
         }
 
         // POST api/values
