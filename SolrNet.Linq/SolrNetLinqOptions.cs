@@ -27,7 +27,7 @@ namespace SolrNet.Linq
         public ISolrFieldSerializer SolrFieldSerializer { get; set; } = null;
 
         /// <summary>
-        /// Set <see cref="IReadOnlyMappingManager"/> field mapping manager. If not set <see cref="AttributesMappingManager"/> attributes mapping manager will be used.
+        /// Set <see cref="IReadOnlyMappingManager"/> field mapping manager. If not set <see cref="AttributesMappingManager"/> attributes mapping manager will be used. More about SolrNet mapping: https://github.com/SolrNet/SolrNet/blob/master/Documentation/Mapping.md
         /// </summary>
         public IReadOnlyMappingManager MappingManager { get; set; } = null;
     }

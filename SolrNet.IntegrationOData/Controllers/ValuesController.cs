@@ -54,7 +54,7 @@ namespace SolrNet.IntegrationOData.Controllers
                 // override default serializer if needed
                 options.SolrFieldSerializer = new DefaultFieldSerializer();
 
-                // override default mapping manager if needed
+                // override default mapping manager if needed.
                 options.MappingManager = new AttributesMappingManager();
             });
 
