@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using SolrNet.Commands.Parameters;
+using SolrNet.Linq.Expressions.Context;
 
 namespace SolrNet.Linq.Expressions
 {
@@ -13,7 +14,7 @@ namespace SolrNet.Linq.Expressions
         public const string ThenBy = nameof(Queryable.ThenBy);
         public const string ThenByDescending = nameof(Queryable.ThenByDescending);
 
-        public static bool TryVisitSorting(this MethodCallExpression node, QueryOptions options, Type type)
+        public static bool TryVisitSorting(this MethodCallExpression node, QueryOptions options, MemberContext context)
         {
             bool asc = node.Method.Name == OrderBy || node.Method.Name == ThenBy;
             bool desc = node.Method.Name == OrderByDescending || node.Method.Name == ThenByDescending;
@@ -22,13 +23,13 @@ namespace SolrNet.Linq.Expressions
 
             if (result)
             {
-                Visit(node, options, asc ? Order.ASC : Order.DESC, type);
+                Visit(node, options, asc ? Order.ASC : Order.DESC, context);
             }
 
             return result;
         }
 
-        private static void Visit(MethodCallExpression node, QueryOptions options, Order order, Type type)
+        private static void Visit(MethodCallExpression node, QueryOptions options, Order order, MemberContext context)
         {
             if (options.OrderBy.Any() && (node.Method.Name == OrderBy || node.Method.Name == OrderByDescending))
             {
@@ -43,7 +44,7 @@ namespace SolrNet.Linq.Expressions
                 LambdaExpression lambda = (LambdaExpression)node.Arguments[1].StripQuotes();
                 Expression orderingMember = lambda.Body;
 
-                string solrExpression = orderingMember.GetSolrMemberProduct(type);
+                string solrExpression = context.GetSolrMemberProduct(orderingMember);
                 options.OrderBy.Add(new SortOrder(solrExpression, order));
             }
             else

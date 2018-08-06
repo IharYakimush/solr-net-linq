@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Community.OData.Linq;
 using Community.OData.Linq.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
+using SolrNet.Impl.FieldSerializers;
 using SolrNet.Linq;
 
 namespace SolrNet.IntegrationOData.Controllers
@@ -29,7 +30,23 @@ namespace SolrNet.IntegrationOData.Controllers
         [HttpGet("{id}")]
         public ActionResult<string> Get(int id, ODataQueryOptions odata)
         {
-            return this.Ok(Product.SolrOperations.Value.AsQuerable().OData().ApplyQueryOptionsWithoutSelectExpand(odata).ToSolrQueryResults());
+            Product.SolrOperations.Value.AsQueryable(options =>
+            {
+                // Set q parameter. By default *:* will be used
+                options.MainQuery = new SolrQuery("some query");
+
+                // Configure SolrNet QueryOptions.
+                // This function will be called after applying query options from LINQ
+                // You can setup options not covered by LINQ. For instance facets
+                options.SetupQueryOptions = queryOptions =>
+                {
+                    queryOptions.AddFacets();
+                };
+
+                // override default serializer if needed
+                options.SolrFieldSerializer = new DefaultFieldSerializer();
+            });
+            return this.Ok(Product.SolrOperations.Value.AsQueryable().OData().ApplyQueryOptionsWithoutSelectExpand(odata).ToSolrQueryResults());
         }
 
         // POST api/values

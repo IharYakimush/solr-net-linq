@@ -18,7 +18,7 @@ namespace SolrNet.Linq.Expressions.Context
 
         public override string GetSolrMemberProduct(Expression expression, bool disableFunctions = false)
         {
-            return expression.GetSolrMemberProduct(_type, disableFunctions);
+            return expression.GetSolrMemberProduct(this, disableFunctions);
         }
 
         public override bool IsAccessToMember(MemberExpression expression)

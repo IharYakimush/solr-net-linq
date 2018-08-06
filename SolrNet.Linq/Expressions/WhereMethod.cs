@@ -10,7 +10,7 @@ namespace SolrNet.Linq.Expressions
     {
         public const string Where = nameof(Queryable.Where);
 
-        public static bool TryVisitWhere(this MethodCallExpression node, QueryOptions options, Type type)
+        public static bool TryVisitWhere(this MethodCallExpression node, QueryOptions options, MemberContext context)
         {
             bool result = node.Method.DeclaringType == typeof(Queryable) && node.Method.Name == Where;
             if (result)
@@ -22,7 +22,7 @@ namespace SolrNet.Linq.Expressions
                     LambdaExpression lambda = (LambdaExpression)node.Arguments[1].StripQuotes();
                     Expression whereMember = lambda.Body;
 
-                    ISolrQuery filter = whereMember.GetSolrFilterQuery(MemberContext.ForType(type));
+                    ISolrQuery filter = whereMember.GetSolrFilterQuery(context);
                     options.FilterQueries.Add(filter);
                 }
                 else

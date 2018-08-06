@@ -18,17 +18,10 @@ public class Product
 }
 ```
 ### IQueryable initialization
-Once you have solr operations interface, call `AsQuerable()` extension method to create `IQueryable<T>`. For instance 
+Once you have solr operations interface, call `AsQueryable()` extension method to create `IQueryable<T>`. For instance 
 ```
 var solr = ServiceLocator.Current.GetInstance<ISolrOperations<Product>>();
-IQueryable<Product> solrLinq = solr.AsQuerable()
-```
-It is possible to combine linq and regular SolrNet QueryOptions and main query. For instance if you need to append facets:
-```
-IQueryable<Product> solrLinq = solr.AsQuerable(options =>
-{
-    // Configure SolrNet QueryOptions by setting params not available in linq
-}, new SolrQuery("some custom query"))
+IQueryable<Product> solrLinq = solr.AsQueryable()
 ```
 Now you can use supported linq methods.
 ### Getting results
@@ -37,10 +30,32 @@ To get result you can
  ```
  SolrQueryResults<Product> result = solrLinq.Where(p => p.Popularity.HasValue).Take(10).ToSolrQueryResults();
  ```
- - Trigger result by starting enumeration like any other IQuerable result triggering
+ - Trigger result by starting enumeration like any other IQueryable result triggering
  ```
  Product[] result = solrLinq.Where(p => p.Popularity.HasValue).Take(10).ToArray();
  ```
+## Customization and workarounds for not suppported capabilities
+It is possible to combine linq and regular SolrNet QueryOptions and main query. For instance if you need to append facets:
+```
+IQueryable<Product> solrLinq = solr.AsQueryable(setup =>
+{
+    // Set q parameter. By default *:* will be used.
+	// LINQ Where method append fq (Filter Query) to query options and not affect main query
+    options.MainQuery = new SolrQuery("some query");
+
+    // Configure SolrNet QueryOptions.
+    // This function will be called after applying query options from LINQ
+    // You can setup options not covered by LINQ, for instance facets
+    options.SetupQueryOptions = queryOptions =>
+    {
+        queryOptions.AddFacets();
+    };
+
+    // override default serializer if needed
+    options.SolrFieldSerializer = new DefaultFieldSerializer();
+});
+```
+
 ## Supported methods
 
 ### Top, Skip

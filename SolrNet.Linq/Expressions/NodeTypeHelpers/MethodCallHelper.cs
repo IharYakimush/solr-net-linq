@@ -24,7 +24,7 @@ namespace SolrNet.Linq.Expressions.NodeTypeHelpers
                 {
                     LambdaExpression lambda = (LambdaExpression) mce.Arguments[1];
 
-                    return lambda.Body.GetSolrFilterQuery(MemberContext.ForLambda(lambda, field));
+                    return lambda.Body.GetSolrFilterQuery(MemberContext.ForLambda(context, lambda, field));
                 }
             }
 
@@ -56,11 +56,11 @@ namespace SolrNet.Linq.Expressions.NodeTypeHelpers
                     }
 
                     return new SolrQueryInList(context.GetSolrMemberProduct(arg2, true),
-                        list.OfType<object>().Select(o => o.SerializeToSolr()));
+                        list.OfType<object>().Select(o => o.SerializeToSolr(context.FieldSerializer)));
                 }
             }
 
-            throw new NotImplementedException();
+            throw new InvalidOperationException($"Unable to translate {mce.Method.Name} method to SOLR expression");
         }
     }
 }

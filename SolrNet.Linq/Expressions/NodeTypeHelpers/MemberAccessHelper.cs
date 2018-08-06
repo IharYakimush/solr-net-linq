@@ -17,7 +17,7 @@ namespace SolrNet.Linq.Expressions.NodeTypeHelpers
             if (context.IsAccessToMember(memberExpression))
             {
                 return new SolrQueryByField(context.GetSolrMemberProduct(memberExpression, true),
-                    Expression.Constant(true).GetSolrMemberProduct(typeof(MemberAccessHelper)));
+                    context.TrueStringSerialized);
             }
 
             if (memberExpression.IsNullableMember())
@@ -34,7 +34,7 @@ namespace SolrNet.Linq.Expressions.NodeTypeHelpers
                         if (memberExpression.Member.Name == nameof(Nullable<int>.Value))
                         {
                             return new SolrQueryByField(context.GetSolrMemberProduct(inner),
-                                Expression.Constant(true).GetSolrMemberProduct(typeof(MemberAccessHelper)));
+                                context.TrueStringSerialized);
                         }
                     }
                 }

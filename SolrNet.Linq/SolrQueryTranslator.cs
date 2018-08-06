@@ -3,24 +3,26 @@ using System.Linq;
 using System.Linq.Expressions;
 using SolrNet.Commands.Parameters;
 using SolrNet.Linq.Expressions;
+using SolrNet.Linq.Expressions.Context;
 
 namespace SolrNet.Linq
 {
     public class SolrQueryTranslator<TEntity> : ExpressionVisitor
     {
-        public ISolrQuery SolrQuery { get; }
-        public QueryOptions Options { get; }
+        public SolrNetLinqOptions SolrNetLinqOptions { get; }
+        public QueryOptions Options { get; } = new QueryOptions();
 
-        public SolrQueryTranslator(ISolrQuery solrQuery, QueryOptions options)
+        public ISolrQuery Query { get; } = SolrQuery.All;
+
+        public SolrQueryTranslator(SolrNetLinqOptions solrNetLinqOptions)
         {
-            SolrQuery = solrQuery ?? throw new ArgumentNullException(nameof(solrQuery));
-            Options = options ?? throw new ArgumentNullException(nameof(options));
+            SolrNetLinqOptions = solrNetLinqOptions ?? throw new ArgumentNullException(nameof(solrNetLinqOptions));
         }
 
         public Tuple<ISolrQuery,QueryOptions> Translate<T>(SolrQueryProvider<T> provider, Expression expression)
         {
             this.Visit(expression);
-            return new Tuple<ISolrQuery, QueryOptions>(SolrQuery, Options);
+            return new Tuple<ISolrQuery, QueryOptions>(Query, Options);
         }
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
@@ -29,8 +31,11 @@ namespace SolrNet.Linq
 
             bool result = node.TryVisitTake(this.Options);
             result |= node.TryVisitSkip(this.Options);
-            result |= node.TryVisitSorting(this.Options, typeof(TEntity));
-            result |= node.TryVisitWhere(this.Options, typeof(TEntity));
+            MemberContext context = MemberContext.ForType<TEntity>();
+            context.FieldSerializer = this.SolrNetLinqOptions.SolrFieldSerializer;
+
+            result |= node.TryVisitSorting(this.Options, context);
+            result |= node.TryVisitWhere(this.Options, context);
 
             if (!result && !(node.Method.DeclaringType == typeof(Queryable) && node.Method.Name == nameof(Queryable.OfType)))
             {

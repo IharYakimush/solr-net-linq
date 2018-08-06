@@ -8,10 +8,10 @@ namespace SolrNet.Linq.IntegrationOData
         [Fact]
         public void ByMember()
         {
-            Product t1 = Product.SolrOperations.Value.AsQuerable().Where(p => p.InStock).AsEnumerable()
+            Product t1 = Product.SolrOperations.Value.AsQueryable().Where(p => p.InStock).AsEnumerable()
                 .FirstOrDefault();
 
-            Product t2 = Product.SolrOperations.Value.AsQuerable().Where(p => !p.InStock).AsEnumerable()
+            Product t2 = Product.SolrOperations.Value.AsQueryable().Where(p => !p.InStock).AsEnumerable()
                 .FirstOrDefault();
 
             Assert.Null(t1);

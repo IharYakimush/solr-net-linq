@@ -8,16 +8,11 @@ namespace SolrNet.Linq
 {
     public static class SolrOperationsExtensions
     {
-        public static SolrQuery<T> AsQuerable<T>(this ISolrBasicReadOnlyOperations<T> operations, Action<QueryOptions> options = null, ISolrQuery solrQuery = null)
+        public static SolrQuery<T> AsQueryable<T>(this ISolrBasicReadOnlyOperations<T> operations, Action<SolrNetLinqOptions> setupOptions = null)
         {
-            QueryOptions o = new QueryOptions();
-            options?.Invoke(o);
-            return new SolrQuery<T>(new SolrQueryProvider<T>(operations, o, solrQuery));
-        }
-
-        public static SolrQuery<T> AsQuerable<T>(this ISolrBasicReadOnlyOperations<T> operations, ISolrQuery solrQuery)
-        {
-            return operations.AsQuerable(null, solrQuery);
+            SolrNetLinqOptions o = new SolrNetLinqOptions();
+            setupOptions?.Invoke(o);
+            return new SolrQuery<T>(new SolrQueryProvider<T>(operations, o));
         }
 
         public static SolrQueryResults<T> ToSolrQueryResults<T>(this IQueryable<T> queryable)

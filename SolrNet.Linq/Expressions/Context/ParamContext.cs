@@ -55,7 +55,7 @@ namespace SolrNet.Linq.Expressions.Context
                 return _fieldName;
             }
 
-            return expression.GetSolrMemberProduct(typeof(ParamContext), disableFunctions);
+            return expression.GetSolrMemberProduct(this, disableFunctions);
         }
 
         public override bool IsAccessToMember(MemberExpression expression)

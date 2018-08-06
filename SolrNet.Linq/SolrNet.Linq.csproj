@@ -12,6 +12,8 @@
     <PackageTags>solr linq</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Version>1.1.0</Version>
+    <PackageReleaseNotes>ability to customize field serializer</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

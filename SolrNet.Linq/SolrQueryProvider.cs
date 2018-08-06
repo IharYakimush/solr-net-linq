@@ -10,16 +10,13 @@ namespace SolrNet.Linq
     public class SolrQueryProvider<TEntity> : IQueryProvider
     {
         public ISolrBasicReadOnlyOperations<TEntity> Operations { get; }
+        public SolrNetLinqOptions Options { get; }
 
-        public QueryOptions QueryOptions { get; }
-
-        public ISolrQuery SolrQuery { get; set; }
-
-        public SolrQueryProvider(ISolrBasicReadOnlyOperations<TEntity> operations, QueryOptions queryOptions = null, ISolrQuery solrQuery = null)
+        public SolrQueryProvider(ISolrBasicReadOnlyOperations<TEntity> operations, SolrNetLinqOptions options)
         {
+            if (options == null) throw new ArgumentNullException(nameof(options));
             Operations = operations ?? throw new ArgumentNullException(nameof(operations));
-            QueryOptions = queryOptions ?? new QueryOptions();
-            SolrQuery = solrQuery ?? global::SolrNet.SolrQuery.All;
+            Options = options;
         }
 
         public IQueryable CreateQuery(Expression expression)
@@ -50,16 +47,18 @@ namespace SolrNet.Linq
 
         public object Execute(Expression expression)
         {
-            SolrQueryTranslator<TEntity> translator = new SolrQueryTranslator<TEntity>(this.SolrQuery, this.QueryOptions);
-            var result = translator.Translate(this, expression);
-            return Operations.Query(result.Item1, result.Item2);
+            SolrQueryTranslator<TEntity> translator = new SolrQueryTranslator<TEntity>(this.Options);
+            Tuple<ISolrQuery, QueryOptions> result = translator.Translate(this, expression);
+            this.Options.SetupQueryOptions?.Invoke(result.Item2);
+            return Operations.Query(this.Options.MainQuery ?? result.Item1, result.Item2);
         }
 
         public Task<SolrQueryResults<TEntity>> ExecuteAsync(Expression expression)
         {
-            SolrQueryTranslator<TEntity> translator = new SolrQueryTranslator<TEntity>(this.SolrQuery, this.QueryOptions);
+            SolrQueryTranslator<TEntity> translator = new SolrQueryTranslator<TEntity>(this.Options);
             var result = translator.Translate(this, expression);
-            return Operations.QueryAsync(result.Item1, result.Item2);
+            this.Options.SetupQueryOptions?.Invoke(result.Item2);
+            return Operations.QueryAsync(this.Options.MainQuery ?? result.Item1, result.Item2);
         }
 
         public TResult Execute<TResult>(Expression expression)

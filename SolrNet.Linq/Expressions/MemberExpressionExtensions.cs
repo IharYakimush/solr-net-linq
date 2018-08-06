@@ -1,25 +1,25 @@
 ﻿using SolrNet.Attributes;
-using SolrNet.Impl.FieldSerializers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
+using SolrNet.Impl;
+using SolrNet.Linq.Expressions.Context;
 
 namespace SolrNet.Linq.Expressions
 {
     public static class MemberExpressionExtensions
     {
-        private static readonly Dictionary<ExpressionType, Func<BinaryExpression, Type, string>> BinaryHelper = new Dictionary<ExpressionType, Func<BinaryExpression, Type, string>> {
+        private static readonly Dictionary<ExpressionType, Func<BinaryExpression, MemberContext, string>> BinaryHelper = new Dictionary<ExpressionType, Func<BinaryExpression, MemberContext, string>> {
             { ExpressionType.Divide ,(b,t) => $"div({b.Left.GetSolrMemberProduct(t)},{b.Right.GetSolrMemberProduct(t)})" },
             { ExpressionType.Subtract ,(b,t) => $"sub({b.Left.GetSolrMemberProduct(t)},{b.Right.GetSolrMemberProduct(t)})" },
             { ExpressionType.Multiply ,(b,t) => $"mul({b.Left.GetSolrMemberProduct(t)},{b.Right.GetSolrMemberProduct(t)})" },
             { ExpressionType.Add ,(b,t) => $"sum({b.Left.GetSolrMemberProduct(t)},{b.Right.GetSolrMemberProduct(t)})" },
         };
 
-        private static readonly Dictionary<string, Func<MethodCallExpression, Type, string>> CallHelper = new Dictionary<string, Func<MethodCallExpression, Type, string>> {
+        private static readonly Dictionary<string, Func<MethodCallExpression, MemberContext, string>> CallHelper = new Dictionary<string, Func<MethodCallExpression, MemberContext, string>> {
             { typeof(Math).FullName + nameof(Math.Abs) ,(c,t) => $"abs({c.Arguments[0].GetSolrMemberProduct(t)})" },
             { typeof(Math).FullName + nameof(Math.Log10) ,(c,t) => $"log({c.Arguments[0].GetSolrMemberProduct(t)})" },
             { typeof(Math).FullName + nameof(Math.Max) ,(c,t) => $"max({c.Arguments[0].GetSolrMemberProduct(t)},{c.Arguments[1].GetSolrMemberProduct(t)})" },
@@ -27,8 +27,6 @@ namespace SolrNet.Linq.Expressions
             { typeof(Math).FullName + nameof(Math.Pow) ,(c,t) => $"pow({c.Arguments[0].GetSolrMemberProduct(t)},{c.Arguments[1].GetSolrMemberProduct(t)})" },
             { typeof(Math).FullName + nameof(Math.Sqrt) ,(c,t) => $"sqrt({c.Arguments[0].GetSolrMemberProduct(t)})" },
         };
-
-        private static readonly DefaultFieldSerializer DefaultFieldSerializer = new DefaultFieldSerializer();
 
         private static readonly ConcurrentDictionary<MemberInfo, string> MemberNames = new ConcurrentDictionary<MemberInfo, string>();
 
@@ -47,7 +45,7 @@ namespace SolrNet.Linq.Expressions
             });
         }
 
-        public static string GetSolrMemberProduct(this Expression exp, Type type, bool disableFunctions = false)
+        internal static string GetSolrMemberProduct(this Expression exp, MemberContext context, bool disableFunctions = false)
         {
             try
             {
@@ -56,8 +54,8 @@ namespace SolrNet.Linq.Expressions
                 if (exp is MemberExpression me)
                 {
                     MemberInfo memberInfo = me.Member;
-
-                    if (memberInfo.DeclaringType == type)
+                    
+                    if (context.IsAccessToMember(me))
                     {
                         return memberInfo.GetMemberSolrName();
                     }
@@ -67,7 +65,7 @@ namespace SolrNet.Linq.Expressions
                         me.Member.DeclaringType.Name.StartsWith(nameof(Nullable)) &&
                         me.Member.Name == nameof(Nullable<int>.Value)) // int may be replaced to any other type
                     {
-                        return me.Expression.GetSolrMemberProduct(type);
+                        return me.Expression.GetSolrMemberProduct(context);
                     }
                 }
 
@@ -75,7 +73,7 @@ namespace SolrNet.Linq.Expressions
                 {
                     if (BinaryHelper.ContainsKey(bin.NodeType))
                     {
-                        return BinaryHelper[bin.NodeType].Invoke(bin, type);
+                        return BinaryHelper[bin.NodeType].Invoke(bin, context);
                     }
                 }
 
@@ -86,7 +84,7 @@ namespace SolrNet.Linq.Expressions
                         string key = call.Method.DeclaringType.FullName + call.Method.Name;
                         if (CallHelper.ContainsKey(key))
                         {
-                            return CallHelper[key].Invoke(call, type);
+                            return CallHelper[key].Invoke(call, context);
                         }
                     }                    
                 }
@@ -94,26 +92,25 @@ namespace SolrNet.Linq.Expressions
                 // Access to member of other type can't be translated, so assume it should be used as a value
                 object value = Expression.Lambda(exp).Compile().DynamicInvoke();
                 
-                return value.SerializeToSolr();
+                return value.SerializeToSolr(context.FieldSerializer);
             }
             catch (InvalidOperationException exception)
             {
                 throw new InvalidOperationException($"Unable to translate SOLR expression {exp}", exception);
             }            
-
-            throw new InvalidOperationException($"Unable to translate SOLR expression {exp}");
         }
 
-        internal static string SerializeToSolr(this object value)
+        internal static string SerializeToSolr(this object value, ISolrFieldSerializer serializer)
         {
+            if (serializer == null) throw new ArgumentNullException(nameof(serializer));
             if (value == null)
             {
                 return null;
             }
 
-            if (DefaultFieldSerializer.CanHandleType(value.GetType()))
+            if (serializer.CanHandleType(value.GetType()))
             {
-                return DefaultFieldSerializer.Serialize(value).First().FieldValue;
+                return serializer.Serialize(value).First().FieldValue;
             }
 
             throw new InvalidOperationException($"Unable to serialize '{value}'.");

@@ -1,19 +1,24 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
+using SolrNet.Impl;
+using SolrNet.Impl.FieldParsers;
+using SolrNet.Impl.FieldSerializers;
 
 namespace SolrNet.Linq.Expressions.Context
 {
     public abstract class MemberContext
-    {
+    {        
+        private static readonly DefaultFieldSerializer DefaultFieldSerializer = new DefaultFieldSerializer();
+        private ISolrFieldSerializer _fieldSerializer;
         public abstract bool HasMemberAccess(Expression expression);
 
         public abstract string GetSolrMemberProduct(Expression expression, bool disableFunctions = false);
 
         public abstract bool IsAccessToMember(MemberExpression expression);
 
-        public static string TrueStringSerialized { get; } =
-            Expression.Constant(true).GetSolrMemberProduct(typeof(MemberContext), true);
-
+        public string TrueStringSerialized => this.FieldSerializer.Serialize(true).Single().FieldValue;
+            
         public static MemberContext ForType<T>()
         {
             return new TypeContext(typeof(T));
@@ -24,9 +29,18 @@ namespace SolrNet.Linq.Expressions.Context
             return new TypeContext(type);
         }
 
-        public static MemberContext ForLambda(LambdaExpression lambdaExpression, string fieldName)
+        public static MemberContext ForLambda(MemberContext parent, LambdaExpression lambdaExpression, string fieldName)
         {
-            return new ParamContext(lambdaExpression, fieldName);
+            ParamContext context = new ParamContext(lambdaExpression, fieldName);
+            context.FieldSerializer = parent.FieldSerializer;
+
+            return context;
+        }
+
+        public ISolrFieldSerializer FieldSerializer
+        {
+            get => _fieldSerializer ?? DefaultFieldSerializer;
+            set => _fieldSerializer = value;
         }
     }
 }

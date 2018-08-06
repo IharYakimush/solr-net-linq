@@ -10,7 +10,7 @@ namespace SolrNet.Linq.IntegrationOData
         [Fact]
         public void AsEnumerable()
         {
-            IEnumerable<Product> result = Product.SolrOperations.Value.AsQuerable().AsEnumerable();
+            IEnumerable<Product> result = Product.SolrOperations.Value.AsQueryable().AsEnumerable();
 
             Assert.True(result.Any());
         }
@@ -18,7 +18,7 @@ namespace SolrNet.Linq.IntegrationOData
         [Fact]
         public void ToSolrQueryResults()
         {
-            SolrQueryResults<Product> result = Product.SolrOperations.Value.AsQuerable().ToSolrQueryResults();
+            SolrQueryResults<Product> result = Product.SolrOperations.Value.AsQueryable().ToSolrQueryResults();
 
             Assert.True(result.NumFound > 0);
         }
@@ -26,7 +26,7 @@ namespace SolrNet.Linq.IntegrationOData
         [Fact]
         public async Task ToSolrQueryResultsAsync()
         {
-            SolrQueryResults<Product> result = await Product.SolrOperations.Value.AsQuerable().ToSolrQueryResultsAsync();
+            SolrQueryResults<Product> result = await Product.SolrOperations.Value.AsQueryable().ToSolrQueryResultsAsync();
 
             Assert.True(result.NumFound > 0);
         }
