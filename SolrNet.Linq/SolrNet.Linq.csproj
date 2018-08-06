@@ -9,7 +9,7 @@
     <Description>SolrNet IQueryable provider</Description>
     <PackageLicenseUrl>https://github.com/IharYakimush/solr-net-linq/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/IharYakimush/solr-net-linq</PackageProjectUrl>
-    <PackageTags>solr linq</PackageTags>
+    <PackageTags>solr solrnet linq</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Version>1.1.0</Version>
@@ -17,7 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SolrNet.Core" Version="1.0.10" />
+    <PackageReference Include="SolrNet.Core" Version="1.0.0" />
   </ItemGroup>
 
 </Project>

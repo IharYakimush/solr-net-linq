@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace SolrNet.Linq
 {
-    public static class TypeSystem
+    internal static class TypeSystem
     {
-        public static Type GetElementType(Type seqType)
+        internal static Type GetElementType(Type seqType)
         {
             Type ienum = FindEnumerable(seqType);
             if (ienum == null)
