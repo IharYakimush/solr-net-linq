@@ -67,6 +67,8 @@ namespace SolrNet.Linq
                 case EnumeratedResult.FirstOrDefault: return solrQueryResults.FirstOrDefault();
                 case EnumeratedResult.Single: return solrQueryResults.Single();
                 case EnumeratedResult.SingleOrDefault: return solrQueryResults.SingleOrDefault();
+                case EnumeratedResult.Any: return solrQueryResults.NumFound > 0;
+                case EnumeratedResult.Count: return solrQueryResults.NumFound;
 
                 default: return solrQueryResults;
             }

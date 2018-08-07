@@ -105,6 +105,14 @@ IQueryable<Product> solrLinq = solr.AsQueryable(setup =>
   ### Paging
   - Top
   - Skip
+  ### Any
+  - Any
+  - AnyAsync
+  ### Count
+  - Count
+  - CountAsync
+  - LongCount
+  - LongCountAsync
   ### First
   - First
   - FirstAsync

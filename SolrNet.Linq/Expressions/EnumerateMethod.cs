@@ -13,6 +13,9 @@ namespace SolrNet.Linq.Expressions
         public const string First = nameof(Queryable.First);
         public const string Single = nameof(Queryable.Single);
         public const string SingleOrDefault = nameof(Queryable.SingleOrDefault);
+        public const string Any = nameof(Queryable.Any);
+        public const string Count = nameof(Queryable.Count);
+        public const string LongCount = nameof(Queryable.LongCount);
 
         public static EnumeratedResult TryVisitEnumerate(this MethodCallExpression node, QueryOptions options, MemberContext context)
         {
@@ -33,6 +36,18 @@ namespace SolrNet.Linq.Expressions
             if (node.Method.Name == Single)
             {
                 result = EnumeratedResult.Single;
+            }
+            if (node.Method.Name == Any)
+            {
+                result = EnumeratedResult.Any;
+            }
+            if (node.Method.Name == Count)
+            {
+                result = EnumeratedResult.Count;
+            }
+            if (node.Method.Name == LongCount)
+            {
+                result = EnumeratedResult.Count;
             }
 
             if (node.Method.DeclaringType == typeof(Queryable) && result != EnumeratedResult.None)
@@ -60,6 +75,11 @@ namespace SolrNet.Linq.Expressions
                 if (result == EnumeratedResult.First || result == EnumeratedResult.FirstOrDefault)
                 {
                     options.Rows = 1;
+                }
+
+                if (result == EnumeratedResult.Any || result == EnumeratedResult.Count)
+                {
+                    options.Rows = 0;
                 }
             }
 

@@ -6,6 +6,8 @@
         First = 1,
         FirstOrDefault = 2,
         Single = 3,
-        SingleOrDefault = 4
+        SingleOrDefault = 4,
+        Any = 5,
+        Count = 6
     }
 }

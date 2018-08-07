@@ -9,6 +9,78 @@ namespace SolrNet.Linq
 {
     public static class SolrLinqExtensions
     {
+        public static async Task<long> LongCountAsync<TSource>(this IQueryable<TSource> query)
+        {            
+            return await query.CountAsync();
+        }
+
+        public static async Task<long> LongCountAsync<TSource>(this IQueryable<TSource> query, Expression<Func<TSource, bool>> predicate)
+        {
+            return await query.LongCountAsync();
+        }
+
+        public static async Task<int> CountAsync<TSource>(this IQueryable<TSource> query)
+        {
+            if (query.Provider is SolrQueryProvider<TSource> provider)
+            {
+                MethodCallExpression mce = Expression.Call(
+                    null,
+                    GetMethod<TSource>(nameof(Queryable.Count), 1),
+                    query.Expression);
+
+                var result = await provider.ExecuteAsync<int>(mce);
+
+                return result;
+            }
+
+            return query.Count();
+        }
+
+        public static async Task<int> CountAsync<TSource>(this IQueryable<TSource> query, Expression<Func<TSource, bool>> predicate)
+        {
+            if (query.Provider is SolrQueryProvider<TSource> provider)
+            {
+                var result = await provider.ExecuteAsync<int>(Expression.Call(
+                    null,
+                    GetMethod<TSource>(nameof(Queryable.Any), 2), query.Expression, predicate));
+
+                return result;
+            }
+
+            return query.Count(predicate);
+        }
+
+        public static async Task<bool> AnyAsync<TSource>(this IQueryable<TSource> query)
+        {
+            if (query.Provider is SolrQueryProvider<TSource> provider)
+            {
+                MethodCallExpression mce = Expression.Call(
+                    null,
+                    GetMethod<TSource>(nameof(Queryable.Any), 1),
+                    query.Expression);
+
+                bool result = await provider.ExecuteAsync<bool>(mce);
+
+                return result;
+            }
+
+            return query.Any();
+        }
+
+        public static async Task<bool> AnyAsync<TSource>(this IQueryable<TSource> query, Expression<Func<TSource, bool>> predicate)
+        {
+            if (query.Provider is SolrQueryProvider<TSource> provider)
+            {
+                bool result = await provider.ExecuteAsync<bool>(Expression.Call(
+                    null,
+                    GetMethod<TSource>(nameof(Queryable.Any), 2), query.Expression, predicate));
+
+                return result;
+            }
+
+            return query.Any(predicate);
+        }
+
         public static async Task<TSource> FirstAsync<TSource>(this IQueryable<TSource> query)
         {
             if (query.Provider is SolrQueryProvider<TSource> provider)

@@ -12,8 +12,8 @@
     <PackageTags>solr solrnet linq</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>1.2.1</Version>
-    <PackageReleaseNotes>support First(), FirstOrDefault(). Single(), SingleOrDefault() methods and its async versions</PackageReleaseNotes>
+    <Version>1.3.0</Version>
+    <PackageReleaseNotes>support Any(), Count(), LongCount() methods and its async versions</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

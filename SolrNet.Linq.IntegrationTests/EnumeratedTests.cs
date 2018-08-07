@@ -101,5 +101,43 @@ namespace SolrNet.Linq.IntegrationTests
             Assert.Null(t3);
             Assert.Null(t4);
         }
+
+        [Fact]
+        public async Task Any()
+        {
+            Assert.True(await Product.SolrOperations.Value.AsQueryable().AnyAsync(p => p.Id != "qwe")); 
+            Assert.True(await Product.SolrOperations.Value.AsQueryable().AnyAsync()); 
+            Assert.True(Product.SolrOperations.Value.AsQueryable().Any()); 
+            Assert.True(Product.SolrOperations.Value.AsQueryable().Any(p => p.Id != "qwe"));
+
+            Assert.False(await Product.SolrOperations.Value.AsQueryable().AnyAsync(p => p.Id == "qwe"));
+            Assert.False(await Product.SolrOperations.Value.AsQueryable().Where(p => p.Id == "qwe").AnyAsync());
+            Assert.False(Product.SolrOperations.Value.AsQueryable().Where(p => p.Id == "qwe").Any());
+            Assert.False(Product.SolrOperations.Value.AsQueryable().Any(p => p.Id == "qwe"));
+        }
+
+        [Fact]
+        public async Task CountLongCount()
+        {
+            var c1 = await Product.SolrOperations.Value.AsQueryable().CountAsync(p => p.Id != "qwe");
+            var c2 = await Product.SolrOperations.Value.AsQueryable().LongCountAsync(p => p.Id != "qwe");
+            var c3 =  Product.SolrOperations.Value.AsQueryable().LongCount(p => p.Id != "qwe");
+            var c4 =  Product.SolrOperations.Value.AsQueryable().Count(p => p.Id != "qwe");
+            
+            Assert.True(c1 > 0);
+            Assert.Equal(c1, c2);
+            Assert.Equal(c1, c3);
+            Assert.Equal(c1, c4);
+
+            var c5 = await Product.SolrOperations.Value.AsQueryable().CountAsync(p => p.Id == "qwe");
+            var c6 = await Product.SolrOperations.Value.AsQueryable().LongCountAsync(p => p.Id == "qwe");
+            var c7 = Product.SolrOperations.Value.AsQueryable().LongCount(p => p.Id == "qwe");
+            var c8 = Product.SolrOperations.Value.AsQueryable().Count(p => p.Id == "qwe");
+
+            Assert.Equal(0, c1);
+            Assert.Equal(0, c2);
+            Assert.Equal(0, c3);
+            Assert.Equal(0, c4);
+        }
     }
 }
