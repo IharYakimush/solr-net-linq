@@ -17,14 +17,14 @@ namespace SolrNet.Linq
 
         public static SolrQueryResults<T> ToSolrQueryResults<T>(this IQueryable<T> queryable)
         {
-            return queryable.Provider.Execute(queryable.Expression) as SolrQueryResults<T>;
+            return (SolrQueryResults<T>)queryable.Provider.Execute(queryable.Expression);
         }
 
         public static Task<SolrQueryResults<T>> ToSolrQueryResultsAsync<T>(this IQueryable<T> queryable)
         {
             if (queryable.Provider is SolrQueryProvider<T> solrProvider)
             {
-                return solrProvider.ExecuteAsync(queryable.Expression);
+                return solrProvider.ExecuteAsync<SolrQueryResults<T>>(queryable.Expression);
             }
 
             return Task.FromResult(ToSolrQueryResults(queryable));

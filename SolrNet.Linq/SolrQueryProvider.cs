@@ -51,12 +51,16 @@ namespace SolrNet.Linq
 
         public object Execute(Expression expression)
         {
-            SolrQueryTranslator translator = new SolrQueryTranslator(this.Options, this.MemberContext);
-            Tuple<ISolrQuery, QueryOptions, EnumeratedResult> result = translator.Translate(this, expression);
-            this.Options.SetupQueryOptions?.Invoke(result.Item2);
+            Tuple<ISolrQuery, QueryOptions, EnumeratedResult> result = Translate(expression);
+
             SolrQueryResults<TEntity> solrQueryResults =
                 Operations.Query(this.Options.MainQuery ?? result.Item1, result.Item2);
 
+            return HandleResults(result, solrQueryResults);
+        }
+
+        private static object HandleResults(Tuple<ISolrQuery, QueryOptions, EnumeratedResult> result, SolrQueryResults<TEntity> solrQueryResults)
+        {
             switch (result.Item3)
             {
                 case EnumeratedResult.First: return solrQueryResults.First();
@@ -66,6 +70,14 @@ namespace SolrNet.Linq
 
                 default: return solrQueryResults;
             }
+        }
+
+        private Tuple<ISolrQuery, QueryOptions, EnumeratedResult> Translate(Expression expression)
+        {
+            SolrQueryTranslator translator = new SolrQueryTranslator(this.Options, this.MemberContext);
+            Tuple<ISolrQuery, QueryOptions, EnumeratedResult> result = translator.Translate(this, expression);
+            this.Options.SetupQueryOptions?.Invoke(result.Item2);
+            return result;
         }
 
         public MemberContext MemberContext
@@ -79,25 +91,37 @@ namespace SolrNet.Linq
             }
         }
 
-        public Task<SolrQueryResults<TEntity>> ExecuteAsync(Expression expression)
+        public async Task<object> ExecuteAsync(Expression expression)
         {
-            SolrQueryTranslator
-                translator = new SolrQueryTranslator(this.Options, this.MemberContext);
-            var result = translator.Translate(this, expression);
-            this.Options.SetupQueryOptions?.Invoke(result.Item2);
-            
-            return Operations.QueryAsync(this.Options.MainQuery ?? result.Item1, result.Item2);
+            Tuple<ISolrQuery, QueryOptions, EnumeratedResult> result = Translate(expression);
+
+            SolrQueryResults<TEntity> solrQueryResults =
+                await Operations.QueryAsync(this.Options.MainQuery ?? result.Item1, result.Item2);
+
+            return HandleResults(result, solrQueryResults);            
         }
 
         public TResult Execute<TResult>(Expression expression)
         {
             object providerResult = this.Execute(expression);
 
+            return CastResult<TResult>(providerResult);
+        }
+
+        public async Task<TResult> ExecuteAsync<TResult>(Expression expression)
+        {
+            object providerResult = await this.ExecuteAsync(expression);
+
+            return CastResult<TResult>(providerResult);
+        }
+
+        private static TResult CastResult<TResult>(object providerResult)
+        {
             TResult result = default(TResult);
 
             try
             {
-                result = (TResult)providerResult;
+                result = (TResult) providerResult;
             }
             catch (InvalidCastException exception)
             {
@@ -110,6 +134,6 @@ namespace SolrNet.Linq
             }
 
             return result;
-        }        
+        }
     }
 }

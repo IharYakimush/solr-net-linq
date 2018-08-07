@@ -18,9 +18,9 @@ namespace SolrNet.Linq
                     GetMethod<TSource>(nameof(Queryable.First), 1),
                     query.Expression);
 
-                SolrQueryResults<TSource> result = await provider.ExecuteAsync(mce);
+                TSource result = await provider.ExecuteAsync<TSource>(mce);
 
-                return result.First();
+                return result;
             }
 
             return query.First();
@@ -30,11 +30,11 @@ namespace SolrNet.Linq
         {
             if (query.Provider is SolrQueryProvider<TSource> provider)
             {
-                SolrQueryResults<TSource> result = await provider.ExecuteAsync(Expression.Call(
+                TSource result = await provider.ExecuteAsync<TSource>(Expression.Call(
                     null,
                     GetMethod<TSource>(nameof(Queryable.First), 2), query.Expression, predicate));
 
-                return result.First();
+                return result;
             }
 
             return query.First(predicate);
@@ -44,11 +44,11 @@ namespace SolrNet.Linq
         {
             if (query.Provider is SolrQueryProvider<TSource> provider)
             {
-                SolrQueryResults<TSource> result = await provider.ExecuteAsync(Expression.Call(
+                TSource result = await provider.ExecuteAsync<TSource>(Expression.Call(
                     null,
                     GetMethod<TSource>(nameof(Queryable.FirstOrDefault), 1), query.Expression));
 
-                return result.FirstOrDefault();
+                return result;
             }
 
             return query.FirstOrDefault();
@@ -58,11 +58,11 @@ namespace SolrNet.Linq
         {
             if (query.Provider is SolrQueryProvider<TSource> provider)
             {
-                SolrQueryResults<TSource> result = await provider.ExecuteAsync(Expression.Call(
+                TSource result = await provider.ExecuteAsync<TSource>(Expression.Call(
                     null,
                     GetMethod<TSource>(nameof(Queryable.FirstOrDefault), 2), query.Expression, predicate));
 
-                return result.FirstOrDefault();
+                return result;
             }
 
             return query.FirstOrDefault(predicate);
@@ -72,11 +72,11 @@ namespace SolrNet.Linq
         {
             if (query.Provider is SolrQueryProvider<TSource> provider)
             {
-                SolrQueryResults<TSource> result = await provider.ExecuteAsync(Expression.Call(
+                TSource result = await provider.ExecuteAsync<TSource>(Expression.Call(
                     null,
                     GetMethod<TSource>(nameof(Queryable.Single), 1), query.Expression));
 
-                return result.Single();
+                return result;
             }
 
             return query.Single();
@@ -86,11 +86,11 @@ namespace SolrNet.Linq
         {
             if (query.Provider is SolrQueryProvider<TSource> provider)
             {
-                SolrQueryResults<TSource> result = await provider.ExecuteAsync(Expression.Call(
+                TSource result = await provider.ExecuteAsync<TSource>(Expression.Call(
                     null,
                     GetMethod<TSource>(nameof(Queryable.Single), 2), query.Expression, predicate));
 
-                return result.Single();
+                return result;
             }
 
             return query.Single(predicate);
@@ -100,11 +100,11 @@ namespace SolrNet.Linq
         {
             if (query.Provider is SolrQueryProvider<TSource> provider)
             {
-                SolrQueryResults<TSource> result = await provider.ExecuteAsync(Expression.Call(
+                TSource result = await provider.ExecuteAsync<TSource>(Expression.Call(
                     null,
                     GetMethod<TSource>(nameof(Queryable.SingleOrDefault), 1), query.Expression));
 
-                return result.SingleOrDefault();
+                return result;
             }
 
             return query.SingleOrDefault();
@@ -114,11 +114,11 @@ namespace SolrNet.Linq
         {
             if (query.Provider is SolrQueryProvider<TSource> provider)
             {
-                SolrQueryResults<TSource> result = await provider.ExecuteAsync(Expression.Call(
+                TSource result = await provider.ExecuteAsync<TSource>(Expression.Call(
                     null,
                     GetMethod<TSource>(nameof(Queryable.SingleOrDefault), 2), query.Expression, predicate));
 
-                return result.SingleOrDefault();
+                return result;
             }
 
             return query.SingleOrDefault(predicate);
