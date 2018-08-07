@@ -6,14 +6,14 @@
     <AssemblyOriginatorKeyFile>sgn.snk</AssemblyOriginatorKeyFile>
     <Authors>IharYakimush</Authors>
     <Company />
-    <Description>SolrNet IQueryable provider. Extend SolrNet functionality by adding limited linq to solr support.</Description>
+    <Description>SolrNet IQueryable provider. Extend SolrNet functionality by adding linq to solr support for basic methods.</Description>
     <PackageLicenseUrl>https://github.com/IharYakimush/solr-net-linq/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/IharYakimush/solr-net-linq</PackageProjectUrl>
     <PackageTags>solr solrnet linq</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Version>1.2.0</Version>
-    <PackageReleaseNotes>support First(), FirstOrDefault(). Single(), SingleOrDefault() methods</PackageReleaseNotes>
+    <PackageReleaseNotes>support First(), FirstOrDefault(). Single(), SingleOrDefault() methods and its async versions</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

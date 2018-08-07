@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -67,13 +68,38 @@ namespace SolrNet.Linq.IntegrationTests
         }
 
         [Fact]
+        public void Throw()
+        {
+            Assert.Throws<InvalidOperationException>(() =>
+                Product.SolrOperations.Value.AsQueryable().First(p => p.Id == "qwe"));
+            Assert.Throws<InvalidOperationException>(() =>
+                Product.SolrOperations.Value.AsQueryable().Single(p => p.Id == "qwe"));
+            Assert.Throws<InvalidOperationException>(() => Product.SolrOperations.Value.AsQueryable().Single());           
+        }
+
+        [Fact]
+        public async Task ThrowAsync()
+        {
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                Product.SolrOperations.Value.AsQueryable().FirstAsync(p => p.Id == "qwe"));
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                Product.SolrOperations.Value.AsQueryable().SingleAsync(p => p.Id == "qwe"));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => Product.SolrOperations.Value.AsQueryable().SingleAsync());
+        }
+
+        [Fact]
         public async Task OrDefaultAsync()
         {
             Product t1 = await Product.SolrOperations.Value.AsQueryable().FirstOrDefaultAsync(p => p.Id == "qwe");
-            Product t2 = await Product.SolrOperations.Value.AsQueryable().SingleOrDefaultAsync(p => p.Id == "qwe");
+            Product t2 = await Product.SolrOperations.Value.AsQueryable().Where(p => p.Id == "qwe").FirstOrDefaultAsync();
+            Product t3 = await Product.SolrOperations.Value.AsQueryable().SingleOrDefaultAsync(p => p.Id == "qwe");
+            Product t4 = await Product.SolrOperations.Value.AsQueryable().Where(p => p.Id == "qwe").SingleOrDefaultAsync();
 
             Assert.Null(t1);
             Assert.Null(t2);
+            Assert.Null(t3);
+            Assert.Null(t4);
         }
     }
 }

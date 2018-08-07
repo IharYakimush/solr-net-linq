@@ -48,7 +48,7 @@ namespace SolrNet.Linq
                     null,
                     GetMethod<TSource>(nameof(Queryable.FirstOrDefault), 1), query.Expression));
 
-                return result.First();
+                return result.FirstOrDefault();
             }
 
             return query.FirstOrDefault();
@@ -62,7 +62,7 @@ namespace SolrNet.Linq
                     null,
                     GetMethod<TSource>(nameof(Queryable.FirstOrDefault), 2), query.Expression, predicate));
 
-                return result.First();
+                return result.FirstOrDefault();
             }
 
             return query.FirstOrDefault(predicate);
@@ -104,7 +104,7 @@ namespace SolrNet.Linq
                     null,
                     GetMethod<TSource>(nameof(Queryable.SingleOrDefault), 1), query.Expression));
 
-                return result.Single();
+                return result.SingleOrDefault();
             }
 
             return query.SingleOrDefault();
@@ -118,7 +118,7 @@ namespace SolrNet.Linq
                     null,
                     GetMethod<TSource>(nameof(Queryable.SingleOrDefault), 2), query.Expression, predicate));
 
-                return result.Single();
+                return result.SingleOrDefault();
             }
 
             return query.SingleOrDefault(predicate);
