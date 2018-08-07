@@ -38,7 +38,7 @@ namespace SolrNet.IntegrationOData.Controllers
         [HttpGet("{id}")]
         public ActionResult<string> Get(int id, ODataQueryOptions odata)
         {
-            SolrQuery<Product> query = this.Solr.AsQueryable(options =>
+            IQueryable<Product> query = this.Solr.AsQueryable(options =>
             {
                 // Set q parameter. By default *:* will be used
                 options.MainQuery = new SolrQuery("*:*");

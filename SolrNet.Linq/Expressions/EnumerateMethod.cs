@@ -47,7 +47,7 @@ namespace SolrNet.Linq.Expressions
             }
             if (node.Method.Name == LongCount)
             {
-                result = EnumeratedResult.Count;
+                result = EnumeratedResult.LongCount;
             }
 
             if (node.Method.DeclaringType == typeof(Queryable) && result != EnumeratedResult.None)
@@ -77,7 +77,7 @@ namespace SolrNet.Linq.Expressions
                     options.Rows = 1;
                 }
 
-                if (result == EnumeratedResult.Any || result == EnumeratedResult.Count)
+                if (result == EnumeratedResult.Any || result == EnumeratedResult.Count || result == EnumeratedResult.LongCount)
                 {
                     options.Rows = 0;
                 }

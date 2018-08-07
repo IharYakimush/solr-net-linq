@@ -10,18 +10,19 @@ namespace SolrNet.Linq
     public static class SolrLinqExtensions
     {
         public static async Task<long> LongCountAsync<TSource>(this IQueryable<TSource> query)
-        {            
-            return await query.CountAsync();
+        {
+            int countAsync = await query.CountAsync();
+            return (long)countAsync;
         }
 
         public static async Task<long> LongCountAsync<TSource>(this IQueryable<TSource> query, Expression<Func<TSource, bool>> predicate)
         {
-            return await query.LongCountAsync();
+            return await query.Where(predicate).LongCountAsync();
         }
 
         public static async Task<int> CountAsync<TSource>(this IQueryable<TSource> query)
         {
-            if (query.Provider is SolrQueryProvider<TSource> provider)
+            if (query.Provider is IAsyncProvider<TSource> provider)
             {
                 MethodCallExpression mce = Expression.Call(
                     null,
@@ -38,11 +39,11 @@ namespace SolrNet.Linq
 
         public static async Task<int> CountAsync<TSource>(this IQueryable<TSource> query, Expression<Func<TSource, bool>> predicate)
         {
-            if (query.Provider is SolrQueryProvider<TSource> provider)
+            if (query.Provider is IAsyncProvider<TSource> provider)
             {
                 var result = await provider.ExecuteAsync<int>(Expression.Call(
                     null,
-                    GetMethod<TSource>(nameof(Queryable.Any), 2), query.Expression, predicate));
+                    GetMethod<TSource>(nameof(Queryable.Count), 2), query.Expression, predicate));
 
                 return result;
             }
@@ -52,7 +53,7 @@ namespace SolrNet.Linq
 
         public static async Task<bool> AnyAsync<TSource>(this IQueryable<TSource> query)
         {
-            if (query.Provider is SolrQueryProvider<TSource> provider)
+            if (query.Provider is IAsyncProvider<TSource> provider)
             {
                 MethodCallExpression mce = Expression.Call(
                     null,
@@ -69,7 +70,7 @@ namespace SolrNet.Linq
 
         public static async Task<bool> AnyAsync<TSource>(this IQueryable<TSource> query, Expression<Func<TSource, bool>> predicate)
         {
-            if (query.Provider is SolrQueryProvider<TSource> provider)
+            if (query.Provider is IAsyncProvider<TSource> provider)
             {
                 bool result = await provider.ExecuteAsync<bool>(Expression.Call(
                     null,
@@ -83,7 +84,7 @@ namespace SolrNet.Linq
 
         public static async Task<TSource> FirstAsync<TSource>(this IQueryable<TSource> query)
         {
-            if (query.Provider is SolrQueryProvider<TSource> provider)
+            if (query.Provider is IAsyncProvider<TSource> provider)
             {
                 MethodCallExpression mce = Expression.Call(
                     null,
@@ -100,7 +101,7 @@ namespace SolrNet.Linq
 
         public static async Task<TSource> FirstAsync<TSource>(this IQueryable<TSource> query, Expression<Func<TSource, bool>> predicate)
         {
-            if (query.Provider is SolrQueryProvider<TSource> provider)
+            if (query.Provider is IAsyncProvider<TSource> provider)
             {
                 TSource result = await provider.ExecuteAsync<TSource>(Expression.Call(
                     null,
@@ -114,7 +115,7 @@ namespace SolrNet.Linq
 
         public static async Task<TSource> FirstOrDefaultAsync<TSource>(this IQueryable<TSource> query)
         {
-            if (query.Provider is SolrQueryProvider<TSource> provider)
+            if (query.Provider is IAsyncProvider<TSource> provider)
             {
                 TSource result = await provider.ExecuteAsync<TSource>(Expression.Call(
                     null,
@@ -128,7 +129,7 @@ namespace SolrNet.Linq
 
         public static async Task<TSource> FirstOrDefaultAsync<TSource>(this IQueryable<TSource> query, Expression<Func<TSource, bool>> predicate)
         {
-            if (query.Provider is SolrQueryProvider<TSource> provider)
+            if (query.Provider is IAsyncProvider<TSource> provider)
             {
                 TSource result = await provider.ExecuteAsync<TSource>(Expression.Call(
                     null,
@@ -142,7 +143,7 @@ namespace SolrNet.Linq
 
         public static async Task<TSource> SingleAsync<TSource>(this IQueryable<TSource> query)
         {
-            if (query.Provider is SolrQueryProvider<TSource> provider)
+            if (query.Provider is IAsyncProvider<TSource> provider)
             {
                 TSource result = await provider.ExecuteAsync<TSource>(Expression.Call(
                     null,
@@ -156,7 +157,7 @@ namespace SolrNet.Linq
 
         public static async Task<TSource> SingleAsync<TSource>(this IQueryable<TSource> query, Expression<Func<TSource, bool>> predicate)
         {
-            if (query.Provider is SolrQueryProvider<TSource> provider)
+            if (query.Provider is IAsyncProvider<TSource> provider)
             {
                 TSource result = await provider.ExecuteAsync<TSource>(Expression.Call(
                     null,
@@ -170,7 +171,7 @@ namespace SolrNet.Linq
 
         public static async Task<TSource> SingleOrDefaultAsync<TSource>(this IQueryable<TSource> query)
         {
-            if (query.Provider is SolrQueryProvider<TSource> provider)
+            if (query.Provider is IAsyncProvider<TSource> provider)
             {
                 TSource result = await provider.ExecuteAsync<TSource>(Expression.Call(
                     null,
@@ -184,7 +185,7 @@ namespace SolrNet.Linq
 
         public static async Task<TSource> SingleOrDefaultAsync<TSource>(this IQueryable<TSource> query, Expression<Func<TSource, bool>> predicate)
         {
-            if (query.Provider is SolrQueryProvider<TSource> provider)
+            if (query.Provider is IAsyncProvider<TSource> provider)
             {
                 TSource result = await provider.ExecuteAsync<TSource>(Expression.Call(
                     null,

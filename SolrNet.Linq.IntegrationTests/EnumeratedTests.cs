@@ -120,7 +120,7 @@ namespace SolrNet.Linq.IntegrationTests
         public async Task CountLongCount()
         {
             var c1 = await Product.SolrOperations.Value.AsQueryable().CountAsync(p => p.Id != "qwe");
-            var c2 = await Product.SolrOperations.Value.AsQueryable().LongCountAsync(p => p.Id != "qwe");
+            long c2 = await Product.SolrOperations.Value.AsQueryable().LongCountAsync(p => p.Id != "qwe");
             var c3 =  Product.SolrOperations.Value.AsQueryable().LongCount(p => p.Id != "qwe");
             var c4 =  Product.SolrOperations.Value.AsQueryable().Count(p => p.Id != "qwe");
             
@@ -134,10 +134,10 @@ namespace SolrNet.Linq.IntegrationTests
             var c7 = Product.SolrOperations.Value.AsQueryable().LongCount(p => p.Id == "qwe");
             var c8 = Product.SolrOperations.Value.AsQueryable().Count(p => p.Id == "qwe");
 
-            Assert.Equal(0, c1);
-            Assert.Equal(0, c2);
-            Assert.Equal(0, c3);
-            Assert.Equal(0, c4);
+            Assert.Equal(0, c5);
+            Assert.Equal(0, c6);
+            Assert.Equal(0, c7);
+            Assert.Equal(0, c8);
         }
     }
 }

@@ -4,13 +4,14 @@ using System.Linq.Expressions;
 using SolrNet.Commands.Parameters;
 using SolrNet.Linq.Expressions;
 using SolrNet.Linq.Expressions.Context;
+using SolrNet.Linq.Expressions.NodeTypeHelpers;
 
 namespace SolrNet.Linq
 {
     public class SolrQueryTranslator : ExpressionVisitor
     {
         public SolrNetLinqOptions SolrNetLinqOptions { get; }
-        public MemberContext Context { get; }
+        public MemberContext Context { get; private set; }
         public QueryOptions Options { get; } = new QueryOptions();
 
         public ISolrQuery Query { get; } = SolrQuery.All;
@@ -23,7 +24,7 @@ namespace SolrNet.Linq
             Context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public Tuple<ISolrQuery,QueryOptions, EnumeratedResult> Translate<T>(SolrQueryProvider<T> provider, Expression expression)
+        public Tuple<ISolrQuery,QueryOptions, EnumeratedResult> Translate<TEntity,TDocument>(SolrQueryProvider<TEntity, TDocument> provider, Expression expression)
         {
             this.Visit(expression);
             return new Tuple<ISolrQuery, QueryOptions, EnumeratedResult>(Query, Options, this.EnumeratedResult);
@@ -34,11 +35,16 @@ namespace SolrNet.Linq
             this.Visit(node.Arguments[0]);
 
             bool result = node.TryVisitTake(this.Options);
-            result |= node.TryVisitSkip(this.Options);
+            result = result || node.TryVisitSkip(this.Options);
 
-            result |= node.TryVisitSorting(this.Options, this.Context);
-            result |= node.TryVisitWhere(this.Options, this.Context);
-
+            result = result || node.TryVisitSorting(this.Options, this.Context);
+            result = result || node.TryVisitWhere(this.Options, this.Context);
+            if (!result)
+            {
+                result = node.TryVisitSelect(this.Options, this.Context, out var newContext);
+                this.Context = newContext;
+            }
+            
             if (!result)
             {
                 this.EnumeratedResult = node.TryVisitEnumerate(this.Options, this.Context);
