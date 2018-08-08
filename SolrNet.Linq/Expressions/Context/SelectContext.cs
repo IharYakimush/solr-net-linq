@@ -65,6 +65,11 @@ namespace SolrNet.Linq.Expressions.Context
                 {
                     return Members[me.Member];
                 }
+
+                if (Aliases.ContainsKey(me.Member) && disableFunctions == false)
+                {
+                    return Aliases[me.Member];
+                }
             }
 
             return expression.GetSolrMemberProduct(this, disableFunctions);

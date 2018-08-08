@@ -48,10 +48,16 @@ namespace SolrNet.Linq.IntegrationTests
                     Assert.Equal("Id:id", qo.Fields.ElementAt(1));
                     Assert.Equal("Price:price", qo.Fields.ElementAt(2));
                     Assert.Equal("Categories:cat", qo.Fields.ElementAt(3));
+
+                    Assert.Equal(3, qo.OrderBy.Count);
+                    Assert.Equal("id", qo.OrderBy.ElementAt(0).FieldName);
+                    Assert.Equal("pow(2,2)", qo.OrderBy.ElementAt(1).FieldName);
+                    Assert.Equal("pow(2,3)", qo.OrderBy.ElementAt(2).FieldName);
+                    
                 }).Where(p => p.Id != null)
                 .Select(p => new Product2 {Id = p.Id, Price = p.Price, Categories = p.Categories, Qwe = Math.Pow(2, 2)})
                 .Where(arg => arg.Categories.Any(s => s == "electronics"))
-                .OrderBy(arg => arg.Id)
+                .OrderBy(arg => arg.Id).ThenBy(arg => arg.Qwe).ThenBy(arg => Math.Pow(2,3))
                 .FirstOrDefault();
 
             Assert.NotNull(t1);
