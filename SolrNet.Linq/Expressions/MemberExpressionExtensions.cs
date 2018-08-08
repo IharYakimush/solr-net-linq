@@ -28,24 +28,7 @@ namespace SolrNet.Linq.Expressions
             { typeof(Math).FullName + nameof(Math.Sqrt) ,(c,t) => $"sqrt({c.Arguments[0].GetSolrMemberProduct(t)})" },
         };
 
-        private static readonly ConcurrentDictionary<MemberInfo, string> MemberNames = new ConcurrentDictionary<MemberInfo, string>();
-
-        private static string GetMemberSolrName(this MemberInfo info, IReadOnlyMappingManager mappingManager)
-        {
-            return MemberNames.GetOrAdd(info, m =>
-            {
-                var att = mappingManager.GetFields(info.DeclaringType);
-
-                SolrFieldModel value = att.Values.FirstOrDefault(f => f.Property == info as PropertyInfo);
-                if (value != null)
-                {
-                    return value.FieldName;
-                }
-
-                throw new InvalidOperationException(
-                    $"Unable to get solr name for {m.DeclaringType}.{m.Name}. Mapping manager has mappings only for {string.Join(", ", att.Values.Select(f => f.Property.Name))}");
-            });
-        }
+        
 
         internal static string GetSolrMemberProduct(this Expression exp, MemberContext context, bool disableFunctions = false)
         {
@@ -59,7 +42,7 @@ namespace SolrNet.Linq.Expressions
                     
                     if (context.IsAccessToMember(me))
                     {
-                        return memberInfo.GetMemberSolrName(context.MappingManager);
+                        return context.GetMemberSolrName(me.Member);
                     }
 
                     if (me.Member.DeclaringType != null &&

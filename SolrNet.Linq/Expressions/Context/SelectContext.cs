@@ -17,7 +17,7 @@ namespace SolrNet.Linq.Expressions.Context
         {
             Expression = expression ?? throw new ArgumentNullException(nameof(expression));
             ParentContext = parentContext ?? throw new ArgumentNullException(nameof(parentContext));
-
+            
             for (int i = 0; i < expression.Arguments.Count; i++)
             {
                 Expression argument = expression.Arguments[i];
@@ -34,14 +34,32 @@ namespace SolrNet.Linq.Expressions.Context
         }
         public override bool HasMemberAccess(Expression expression)
         {
-            throw new System.NotImplementedException();
+            bool hasMemberAccess = expression.HasMemberAccess(this.Expression.Type);
+            return hasMemberAccess;
         }
 
         public override string GetSolrMemberProduct(Expression expression, bool disableFunctions = false)
         {
-            throw new System.NotImplementedException();
+            if (expression is MemberExpression me)
+            {
+                if (Members.ContainsKey(me.Member))
+                {
+                    return Members[me.Member];
+                }
+            }
+
+            return expression.GetSolrMemberProduct(this, disableFunctions);
         }
 
+        public override string GetMemberSolrName(MemberInfo info)
+        {
+            if (Members.ContainsKey(info))
+            {
+                return Members[info];
+            }
+
+            throw new InvalidOperationException($"Member {info.Name} of type {info.DeclaringType} is calculated field and can't be used in methods other than Select");
+        }
         public override bool IsAccessToMember(MemberExpression expression)
         {
             return Members.ContainsKey(expression.Member);

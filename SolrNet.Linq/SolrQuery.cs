@@ -6,15 +6,15 @@ using System.Linq.Expressions;
 
 namespace SolrNet.Linq
 {
-    public class SolrQuery<TEntity,TDocument> : IOrderedQueryable<TEntity>
+    public class SolrQuery<TEntity> : IOrderedQueryable<TEntity>
     {
-        public SolrQuery(SolrQueryProvider<TEntity, TDocument> provider)
+        public SolrQuery(SolrQueryProvider<TEntity> provider)
         {
             this.Provider = provider ?? throw new ArgumentNullException(nameof(provider));
             this.Expression = Expression.Constant(this);
         }
 
-        public SolrQuery(SolrQueryProvider<TEntity, TDocument> provider, Expression expression)
+        public SolrQuery(SolrQueryProvider<TEntity> provider, Expression expression)
         {
             this.Expression = expression ?? throw new ArgumentNullException(nameof(expression));            
 

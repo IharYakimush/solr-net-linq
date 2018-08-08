@@ -12,7 +12,7 @@ namespace SolrNet.Linq
         {
             SolrNetLinqOptions o = new SolrNetLinqOptions();
             setupOptions?.Invoke(o);
-            return new SolrQuery<T,T>(new SolrQueryProvider<T,T>(operations, o));
+            return new SolrQuery<T>(new SolrQueryProvider<T>(operations, o, null));
         }
 
         public static SolrQueryResults<T> ToSolrQueryResults<T>(this IQueryable<T> queryable)

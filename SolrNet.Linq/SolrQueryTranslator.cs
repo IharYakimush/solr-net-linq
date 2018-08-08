@@ -24,7 +24,7 @@ namespace SolrNet.Linq
             Context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public Tuple<ISolrQuery,QueryOptions, EnumeratedResult> Translate<TEntity,TDocument>(SolrQueryProvider<TEntity, TDocument> provider, Expression expression)
+        public Tuple<ISolrQuery,QueryOptions, EnumeratedResult> Translate<TEntity>(SolrQueryProvider<TEntity> provider, Expression expression)
         {
             this.Visit(expression);
             return new Tuple<ISolrQuery, QueryOptions, EnumeratedResult>(Query, Options, this.EnumeratedResult);
@@ -42,7 +42,10 @@ namespace SolrNet.Linq
             if (!result)
             {
                 result = node.TryVisitSelect(this.Options, this.Context, out var newContext);
-                this.Context = newContext;
+                if (result)
+                {
+                    this.Context = newContext;
+                }                
             }
             
             if (!result)
