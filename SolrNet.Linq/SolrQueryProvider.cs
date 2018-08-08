@@ -6,15 +6,16 @@ using System.Threading.Tasks;
 using SolrNet.Commands.Parameters;
 using SolrNet.Linq.Expressions;
 using SolrNet.Linq.Expressions.Context;
+using SolrNet.Linq.Impl;
 
 namespace SolrNet.Linq
 {
     public class SolrQueryProvider<TEntity> : IQueryProvider, IAsyncProvider<TEntity>
     {  
-        public ISolrBasicReadOnlyOperations<TEntity> Operations { get; }
+        public IExecuter<TEntity> Operations { get; }
         public SolrNetLinqOptions Options { get; }
 
-        public SolrQueryProvider(ISolrBasicReadOnlyOperations<TEntity> operations, SolrNetLinqOptions options, MemberContext context)
+        public SolrQueryProvider(IExecuter<TEntity> operations, SolrNetLinqOptions options, MemberContext context)
         {
             Operations = operations ?? throw new ArgumentNullException(nameof(operations));
             Options = options ?? throw new ArgumentNullException(nameof(options));
@@ -46,18 +47,16 @@ namespace SolrNet.Linq
                     se.Method.Name == nameof(Queryable.Select))
                 {
                     return (IQueryable) Activator.CreateInstance(
-                        typeof(SolrQuery<>).MakeGenericType(elementType), new object[]
-                        {
-                            Activator.CreateInstance(
-                                typeof(SolrQueryProvider<>).MakeGenericType(elementType),
-                                new object[]
-                                {
-                                    this.Operations,
-                                    this.Options,
-                                    this.MemberContext
-                                }),
-                            expression
-                        });
+                        typeof(SolrQuery<>).MakeGenericType(elementType),
+                        Activator.CreateInstance(
+                            typeof(SolrQueryProvider<>).MakeGenericType(elementType),
+                            typeof(ExecuterExtensions)
+                                .GetMethod(nameof(ExecuterExtensions.ChangeType), BindingFlags.Public | BindingFlags.Static)
+                                .MakeGenericMethod(elementType, typeof(TEntity))
+                                .Invoke(null, new object[] {this.Operations}),
+                            this.Options,
+                            this.MemberContext),
+                        expression);
                 }
             }
 
@@ -74,7 +73,7 @@ namespace SolrNet.Linq
             Tuple<ISolrQuery, QueryOptions, EnumeratedResult> result = Translate(expression);
 
             SolrQueryResults<TEntity> solrQueryResults =
-                Operations.Query(this.Options.MainQuery ?? result.Item1, result.Item2);
+                Operations.Execute(this.Options.MainQuery ?? result.Item1, result.Item2);
 
             return HandleResults(result, solrQueryResults);
         }
@@ -110,7 +109,7 @@ namespace SolrNet.Linq
             Tuple<ISolrQuery, QueryOptions, EnumeratedResult> result = Translate(expression);
 
             SolrQueryResults<TEntity> solrQueryResults =
-                await Operations.QueryAsync(this.Options.MainQuery ?? result.Item1, result.Item2);
+                await Operations.ExecuteAsync(this.Options.MainQuery ?? result.Item1, result.Item2);
 
             return HandleResults(result, solrQueryResults);            
         }

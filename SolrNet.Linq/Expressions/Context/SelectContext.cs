@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -7,7 +8,7 @@ namespace SolrNet.Linq.Expressions.Context
 {
     public class SelectContext : MemberContext
     {
-        public NewExpression Expression { get; }
+        public NewExpression NewExpression { get; }
         public MemberContext ParentContext { get; }
 
         public Dictionary<MemberInfo, string> Members { get; } = new Dictionary<MemberInfo, string>();
@@ -15,7 +16,7 @@ namespace SolrNet.Linq.Expressions.Context
 
         public SelectContext(NewExpression expression, MemberContext parentContext)
         {
-            Expression = expression ?? throw new ArgumentNullException(nameof(expression));
+            NewExpression = expression ?? throw new ArgumentNullException(nameof(expression));
             ParentContext = parentContext ?? throw new ArgumentNullException(nameof(parentContext));
             
             for (int i = 0; i < expression.Arguments.Count; i++)
@@ -23,8 +24,7 @@ namespace SolrNet.Linq.Expressions.Context
                 Expression argument = expression.Arguments[i];
                 if (argument.NodeType != ExpressionType.MemberAccess)
                 {
-                    string value = $"v{i}:{parentContext.GetSolrMemberProduct(argument)}";
-                    Aliases.Add(expression.Members[i], value);
+                    Aliases.Add(expression.Members[i], parentContext.GetSolrMemberProduct(argument));
                 }
                 else
                 {
@@ -32,9 +32,28 @@ namespace SolrNet.Linq.Expressions.Context
                 }
             }            
         }
+
+        public SelectContext(MemberInitExpression expression, MemberContext parentContext)
+        {
+            NewExpression = expression?.NewExpression ?? throw new ArgumentNullException(nameof(expression));
+            ParentContext = parentContext ?? throw new ArgumentNullException(nameof(parentContext));
+
+            foreach (MemberAssignment binding in expression.Bindings.OfType<MemberAssignment>())
+            {
+                if (binding.Expression.NodeType != ExpressionType.MemberAccess)
+                {
+                    Aliases.Add(binding.Member, parentContext.GetSolrMemberProduct(binding.Expression));
+                }
+                else
+                {
+                    Members.Add(binding.Member, parentContext.GetSolrMemberProduct(binding.Expression, true));
+                }
+            }
+        }
+
         public override bool HasMemberAccess(Expression expression)
         {
-            bool hasMemberAccess = expression.HasMemberAccess(this.Expression.Type);
+            bool hasMemberAccess = expression.HasMemberAccess(this.NewExpression.Type);
             return hasMemberAccess;
         }
 

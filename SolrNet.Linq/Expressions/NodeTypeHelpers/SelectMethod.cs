@@ -25,11 +25,19 @@ namespace SolrNet.Linq.Expressions.NodeTypeHelpers
 
                     if (lambda.Body is NewExpression selectMember)
                     {
-                        newContext = new SelectContext(selectMember, context);
+                        newContext = new SelectContext(selectMember, context);                        
+                    }
 
-                        foreach (var pairValue in newContext.Aliases.Values.Concat(newContext.Members.Values))
+                    if (lambda.Body is MemberInitExpression memberInit)
+                    {
+                        newContext = new SelectContext(memberInit, context);
+                    }
+
+                    if (newContext != null)
+                    {
+                        foreach (var pairValue in newContext.Aliases.Concat(newContext.Members))
                         {
-                            options.Fields.Add(pairValue);
+                            options.Fields.Add($"{pairValue.Key.Name}:{pairValue.Value}");
                         }
 
                         return result;
