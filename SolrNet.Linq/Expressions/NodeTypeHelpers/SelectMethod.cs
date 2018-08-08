@@ -35,6 +35,7 @@ namespace SolrNet.Linq.Expressions.NodeTypeHelpers
 
                     if (newContext != null)
                     {
+                        options.Fields.Clear();
                         foreach (var pairValue in newContext.Aliases.Concat(newContext.Members))
                         {
                             options.Fields.Add($"{pairValue.Key.Name}:{pairValue.Value}");

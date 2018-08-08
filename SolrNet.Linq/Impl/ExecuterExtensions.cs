@@ -29,7 +29,7 @@ namespace SolrNet.Linq.Impl
 
                 ISolrAbstractResponseParser<TNew> parser =
                     new DefaultResponseParser<TNew>(
-                        new SolrDocumentResponseParser<TNew>(mapper, sdpv, new SolrDocumentActivator<TNew>()));
+                        new SolrDocumentResponseParser<TNew>(mapper, sdpv, new AnonymousTypeActivator<TNew>()));
 
                 SolrQueryExecuter<TNew> newExecuter = new SolrQueryExecuter<TNew>(parser, connection, serializer,
                     facetQuerySerializer,
