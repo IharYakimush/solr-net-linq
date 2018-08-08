@@ -28,7 +28,13 @@ namespace SolrNet.Linq.Expressions
             { typeof(Math).FullName + nameof(Math.Sqrt) ,(c,t) => $"sqrt({c.Arguments[0].GetSolrMemberProduct(t)})" },
         };
 
-        
+        private static readonly Dictionary<string, Func<MethodCallExpression, MemberContext, string>> TransformersHelper = new Dictionary<string, Func<MethodCallExpression, MemberContext, string>> {
+            { nameof(SolrExpr.Transformers.Value) + typeof(string).Name ,(c,t) => $"[value v='{c.Arguments[0].GetSolrMemberProduct(t)}']" },
+            { nameof(SolrExpr.Transformers.Value) + typeof(int).Name ,(c,t) => $"[value v={c.Arguments[0].GetSolrMemberProduct(t)} t=int]" },
+            { nameof(SolrExpr.Transformers.Value) + typeof(float).Name ,(c,t) => $"[value v={c.Arguments[0].GetSolrMemberProduct(t)} t=float]" },
+            { nameof(SolrExpr.Transformers.Value) + typeof(double).Name ,(c,t) => $"[value v={c.Arguments[0].GetSolrMemberProduct(t)} t=double]" },
+            { nameof(SolrExpr.Transformers.Value) + typeof(DateTime).Name ,(c,t) => $"[value v={c.Arguments[0].GetSolrMemberProduct(t)} t=date]" },
+        };
 
         internal static string GetSolrMemberProduct(this Expression exp, MemberContext context, bool disableFunctions = false)
         {
@@ -70,6 +76,15 @@ namespace SolrNet.Linq.Expressions
                         if (CallHelper.ContainsKey(key))
                         {
                             return CallHelper[key].Invoke(call, context);
+                        }
+
+                        if (call.Method.DeclaringType == typeof(SolrExpr.Transformers))
+                        {
+                            string tkey = call.Method.Name + call.Method.ReturnType.Name;
+                            if (TransformersHelper.ContainsKey(tkey))
+                            {
+                                return TransformersHelper[tkey].Invoke(call, context);
+                            }
                         }
                     }                    
                 }

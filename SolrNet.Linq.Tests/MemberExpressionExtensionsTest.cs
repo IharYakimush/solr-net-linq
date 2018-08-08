@@ -34,6 +34,16 @@ namespace SolrNet.Linq.Tests
         }
 
         [Fact]
+        public void TransformersValue()
+        {
+            Expression<Func<Product, object>> exp = (Product p) => SolrExpr.Transformers.Value("qwe");
+            Assert.Equal("[value v='qwe']", MemberContext.ForType<Product>().GetSolrMemberProduct(exp.Body));
+
+            exp = (Product p) => SolrExpr.Transformers.Value(1);
+            Assert.Equal("[value v=1 t=int]", MemberContext.ForType<Product>().GetSolrMemberProduct(exp.Body));
+        }
+
+        [Fact]
         public void Sub()
         {
             Expression<Func<Product, object>> exp = (Product p) => p.Popularity - 10;

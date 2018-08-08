@@ -11,7 +11,7 @@ namespace SolrNet.Linq
         public SolrQuery(SolrQueryProvider<TEntity> provider)
         {
             this.Provider = provider ?? throw new ArgumentNullException(nameof(provider));
-            this.Expression = Expression.Constant(this);
+            this.Expression = Expression.Constant(this);            
         }
 
         public SolrQuery(SolrQueryProvider<TEntity> provider, Expression expression)

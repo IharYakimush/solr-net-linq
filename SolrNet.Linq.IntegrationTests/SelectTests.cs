@@ -37,6 +37,7 @@ namespace SolrNet.Linq.IntegrationTests
                 .FirstOrDefault();
 
             Assert.NotNull(t1);
+            Assert.NotNull(t1.Id);
         }
 
         [Fact]
@@ -55,8 +56,30 @@ namespace SolrNet.Linq.IntegrationTests
                 .FirstOrDefault(arg2 => arg2.Id != null);
 
             Assert.NotNull(t1);
+            Assert.NotNull(t1.Id);
         }
 
+        [Fact]
+        public void Transformers()
+        {
+            var dateTime = new DateTime(2011, 1, 2, 3, 4, 5, DateTimeKind.Utc);
+            var t1 = Product.SolrOperations.Value.AsQueryable()
+                .Select(arg => new
+                {
+                    ValStr = SolrExpr.Transformers.Value("qwe"),
+                    ValInt = SolrExpr.Transformers.Value((int) 1),
+                    ValFloat = SolrExpr.Transformers.Value((float) 2),
+                    ValDouble = SolrExpr.Transformers.Value((double) 3),
+                    ValDate = SolrExpr.Transformers.Value(dateTime),
+                })
+                .First();
+
+            Assert.Equal("qwe", t1.ValStr);
+            Assert.Equal(1, t1.ValInt);
+            Assert.Equal(2f, t1.ValFloat);
+            Assert.Equal(3d, t1.ValDouble);
+            Assert.Equal(dateTime, t1.ValDate);
+        }
 
         [Fact]
         public void Product2()
@@ -83,6 +106,7 @@ namespace SolrNet.Linq.IntegrationTests
                 .FirstOrDefault();
 
             Assert.NotNull(t1);
+            Assert.NotNull(t1.Id);
 
             var t2 = Product.SolrOperations.Value.AsQueryable().Where(p => p.Id != null)                
                 .Where(arg => arg.Categories.Any(s => s == "electronics"))
