@@ -7,22 +7,21 @@ namespace SolrNet.Linq.Impl
 {
     public class SelectQueryExecutor<T> : IExecuter<T>
     {
-        private readonly SolrQueryExecuter<T> _executer;
-
-        public SelectQueryExecutor(SolrQueryExecuter<T> executer)
+        public SelectQueryExecutor(
+            SolrQueryExecuter<T> executer)
         {
-            _executer = executer ?? throw new ArgumentNullException(nameof(executer));
+            Executer = executer ?? throw new ArgumentNullException(nameof(executer));
         }
         public SolrQueryResults<T> Execute(ISolrQuery q, QueryOptions options)
         {
-            return this._executer.Execute(q, options);
+            return this.Executer.Execute(q, options);
         }
 
         public Task<SolrQueryResults<T>> ExecuteAsync(ISolrQuery q, QueryOptions options)
         {
-            return this._executer.ExecuteAsync(q, options);
+            return this.Executer.ExecuteAsync(q, options);
         }
 
-        public SolrQueryExecuter<T> Executer => this._executer;
-    }
+        public SolrQueryExecuter<T> Executer { get; }
+    }    
 }

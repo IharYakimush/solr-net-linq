@@ -11,21 +11,12 @@ namespace SolrNet.Linq
     {
         public static IQueryable<T> AsQueryable<T>(this ISolrBasicReadOnlyOperations<T> operations, Action<SolrNetLinqOptions> setupOptions = null)
         {
-            SolrNetLinqOptions o = new SolrNetLinqOptions();
-            setupOptions?.Invoke(o);
+            SolrNetLinqOptions options = new SolrNetLinqOptions();
+            setupOptions?.Invoke(options);
             return new SolrQuery<T>(new SolrQueryProvider<T>(
                 new SolrQueryExecuterWrapperBasicOperations<T>(operations),
-                o, null));
-        }
-
-        //public static IQueryable<T> AsQueryable<T>(this ISolrQueryExecuter<T> operations, Action<SolrNetLinqOptions> setupOptions = null)
-        //{
-        //    SolrNetLinqOptions o = new SolrNetLinqOptions();
-        //    setupOptions?.Invoke(o);
-        //    return new SolrQuery<T>(new SolrQueryProvider<T>(
-        //        operations,
-        //        o, null));
-        //}
+                options, null));
+        }       
 
         public static SolrQueryResults<T> ToSolrQueryResults<T>(this IQueryable<T> queryable)
         {

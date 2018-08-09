@@ -53,7 +53,7 @@ namespace SolrNet.Linq
                             typeof(ExecuterExtensions)
                                 .GetMethod(nameof(ExecuterExtensions.ChangeType), BindingFlags.Public | BindingFlags.Static)
                                 .MakeGenericMethod(elementType, typeof(TEntity))
-                                .Invoke(null, new object[] {this.Operations}),
+                                .Invoke(null, new object[] {this.Operations, this.Options.SolrFieldParser }),
                             this.Options,
                             this.MemberContext),
                         expression);

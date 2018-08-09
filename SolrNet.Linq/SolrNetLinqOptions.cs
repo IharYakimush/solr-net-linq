@@ -1,6 +1,7 @@
 ﻿using System;
 using SolrNet.Commands.Parameters;
 using SolrNet.Impl;
+using SolrNet.Impl.FieldParsers;
 using SolrNet.Impl.FieldSerializers;
 using SolrNet.Mapping;
 
@@ -30,5 +31,10 @@ namespace SolrNet.Linq
         /// Set <see cref="IReadOnlyMappingManager"/> field mapping manager. If not set <see cref="AttributesMappingManager"/> attributes mapping manager will be used. More about SolrNet mapping: https://github.com/SolrNet/SolrNet/blob/master/Documentation/Mapping.md
         /// </summary>
         public IReadOnlyMappingManager MappingManager { get; set; } = null;
+
+        /// <summary>
+        /// Set solr field parser which will be used in case of Select() method applying. If not set <see cref="DefaultFieldParser"/> will be used.
+        /// </summary>
+        public ISolrFieldParser SolrFieldParser { get; set; } = null;
     }
 }

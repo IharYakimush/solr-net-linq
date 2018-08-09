@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
-using SolrNet.Attributes;
-using SolrNet.Commands.Parameters;
 using SolrNet.Exceptions;
 using Xunit;
 
@@ -38,6 +35,25 @@ namespace SolrNet.Linq.IntegrationTests
 
             Assert.NotNull(t1);
             Assert.NotNull(t1.Id);
+            Assert.Equal(4, t1.Qwe);
+            Assert.True(t1.Categories.Count > 0);
+            Assert.True(t1.Price > 0);
+        }
+
+        [Fact]
+        public void AnonymousClassSolrResult()
+        {
+            var t1 = Product.SolrOperations.Value.AsQueryable().Where(p => p.Id != null)
+                .Select(p => new {p.Id, p.Price, p.Categories, Qwe = Math.Pow(2, 2)})
+                .Where(arg => arg.Categories.Any(s => s == "electronics"))
+                .OrderBy(arg => arg.Id)
+                .ToSolrQueryResults();
+
+            Assert.NotNull(t1);
+            Assert.NotNull(t1[0].Id);
+            Assert.Equal(4, t1[0].Qwe);
+            Assert.True(t1.Count > 0);
+            Assert.True(t1.NumFound > 0);
         }
 
         [Fact]

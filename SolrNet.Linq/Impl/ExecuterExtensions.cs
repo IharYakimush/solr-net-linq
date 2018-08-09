@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using SolrNet.Impl;
 using SolrNet.Impl.DocumentPropertyVisitors;
 using SolrNet.Impl.FieldParsers;
@@ -11,7 +12,7 @@ namespace SolrNet.Linq.Impl
 {
     public static class ExecuterExtensions
     {
-        public static IExecuter<TNew> ChangeType<TNew, TOld>(this IExecuter<TOld> executer)
+        public static IExecuter<TNew> ChangeType<TNew, TOld>(this IExecuter<TOld> executer, ISolrFieldParser sfp = null)
         {
             try
             {
@@ -21,15 +22,23 @@ namespace SolrNet.Linq.Impl
                 ISolrQuerySerializer serializer = oldExecuter.GetSingleField<ISolrQuerySerializer>();
                 ISolrFacetQuerySerializer facetQuerySerializer = oldExecuter.GetSingleField<ISolrFacetQuerySerializer>();
 
-                //TODO: 
-                IReadOnlyMappingManager mapper = new AllPropertiesMappingManager();
+                sfp = sfp ?? new DefaultFieldParser();
+                ISolrDocumentResponseParser<TNew> docParser;
 
-                ISolrFieldParser sfp = new DefaultFieldParser();
-                ISolrDocumentPropertyVisitor sdpv = new DefaultDocumentVisitor(mapper, sfp);
-
-                ISolrAbstractResponseParser<TNew> parser =
-                    new DefaultResponseParser<TNew>(
-                        new SolrDocumentResponseParser<TNew>(mapper, sdpv, new AnonymousTypeActivator<TNew>()));
+                // Anonymous types can't be created by default SolrNet parsers, because the don't have property setters.
+                if (CheckIfAnonymousType(typeof(TNew)))
+                {
+                    docParser =
+                        new SelectResponseParser<TNew>(sfp);
+                }
+                else
+                {
+                    IReadOnlyMappingManager mapper = new AllPropertiesMappingManager();
+                    docParser = new SolrDocumentResponseParser<TNew>(mapper, new DefaultDocumentVisitor(mapper, sfp),
+                        new SolrDocumentActivator<TNew>());
+                }
+                
+                ISolrAbstractResponseParser<TNew> parser = new DefaultResponseParser<TNew>(docParser);
 
                 SolrQueryExecuter<TNew> newExecuter = new SolrQueryExecuter<TNew>(parser, connection, serializer,
                     facetQuerySerializer,
@@ -60,6 +69,18 @@ namespace SolrNet.Linq.Impl
             FieldInfo field = type.GetFields(bindFlags).Single(info => info.FieldType == typeof(T));
             
             return (T)field.GetValue(instance);
+        }
+
+        private static bool CheckIfAnonymousType(Type type)
+        {
+            if (type == null)
+                throw new ArgumentNullException(nameof(type));
+
+            // HACK: The only way to detect anonymous types right now.
+            return Attribute.IsDefined(type, typeof(CompilerGeneratedAttribute), false)
+                   && type.IsGenericType && type.Name.Contains("AnonymousType")
+                   && (type.Name.StartsWith("<>") || type.Name.StartsWith("VB$"))
+                   && (type.Attributes & TypeAttributes.NotPublic) == TypeAttributes.NotPublic;
         }
     }
 }

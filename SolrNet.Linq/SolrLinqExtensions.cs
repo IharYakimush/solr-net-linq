@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
+using SolrNet.Linq.Impl;
 using SolrNet.Mapping.Validation;
 
 namespace SolrNet.Linq

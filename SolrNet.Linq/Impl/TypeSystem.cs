@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace SolrNet.Linq
+namespace SolrNet.Linq.Impl
 {
     internal static class TypeSystem
     {
