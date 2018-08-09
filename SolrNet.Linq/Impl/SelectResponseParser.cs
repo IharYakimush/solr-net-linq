@@ -38,7 +38,21 @@ namespace SolrNet.Linq.Impl
                 object obj = p.ParameterType.IsValueType ? Activator.CreateInstance(p.ParameterType) : null;
                 if (fields.ContainsKey(p.Name))
                 {
-                    if (this.parser.CanHandleSolrType(fields[p.Name].Name.LocalName) &&
+                    if (p.ParameterType == typeof(XElement))
+                    {
+                        string text = fields[p.Name].ToString();
+                        try
+                        {
+                            
+                            obj = XElement.Parse(text);
+                        }
+                        catch (Exception e)
+                        {
+                            throw new InvalidOperationException(
+                                $"Unable to set value for {p.Name}. Value {text} can't be parsed to XElement",e);
+                        }                        
+                    }
+                    else if (this.parser.CanHandleSolrType(fields[p.Name].Name.LocalName) &&
                         this.parser.CanHandleType(p.ParameterType))
                     {
                         obj = this.parser.Parse(fields[p.Name], p.ParameterType);

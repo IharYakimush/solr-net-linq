@@ -41,6 +41,45 @@ namespace SolrNet.Linq.IntegrationTests
         }
 
         [Fact]
+        public void AnonymousIdAndScore()
+        {
+            var t1 = Product.SolrOperations.Value.AsQueryable(lo => lo.SetupQueryOptions = qo =>
+                {
+                    Assert.Equal("Score:score", qo.Fields.ElementAt(0));
+                    Assert.Equal("Id:id", qo.Fields.ElementAt(1));
+                })
+                .Select(p => new { p.Id, Score= SolrExpr.Fields.Score()})                
+                .OrderBy(arg => arg.Score)
+                .FirstOrDefault();
+
+            Assert.NotNull(t1);
+            Assert.NotNull(t1.Id);
+            Assert.Equal(1, t1.Score);
+        }
+
+        [Fact]
+        public void AnonymousOrderByProduct()
+        {
+            var t1 = Product.SolrOperations.Value.AsQueryable(lo => lo.SetupQueryOptions = qo =>
+                {
+                    Assert.Equal("Qwe:pow(2,2)", qo.Fields.ElementAt(0));
+                    Assert.Equal("Id:id", qo.Fields.ElementAt(1));
+                    Assert.Equal("Price:price", qo.Fields.ElementAt(2));
+                    Assert.Equal("Categories:cat", qo.Fields.ElementAt(3));
+                }).Where(p => p.Id != null)
+                .Select(p => new { p.Id, p.Price, p.Categories, Qwe = Math.Pow(2, 2) })
+                .Where(arg => arg.Categories.Any(s => s == "electronics"))
+                .OrderBy(arg => arg.Id).ThenBy(arg=>arg.Qwe)
+                .FirstOrDefault();
+
+            Assert.NotNull(t1);
+            Assert.NotNull(t1.Id);
+            Assert.Equal(4, t1.Qwe);
+            Assert.True(t1.Categories.Count > 0);
+            Assert.True(t1.Price > 0);
+        }
+
+        [Fact]
         public void AnonymousClassSolrResult()
         {
             var t1 = Product.SolrOperations.Value.AsQueryable().Where(p => p.Id != null)
@@ -67,7 +106,7 @@ namespace SolrNet.Linq.IntegrationTests
                 }).Where(p => p.Id != null)
                 .Select(p => new {p.Id, p.Price, p.Categories, Qwe = Math.Pow(2, 2)})
                 .Where(arg => arg.Categories.Any(s => s == "electronics"))
-                .OrderBy(arg => arg.Id)
+                .OrderBy(arg => arg.Id).ThenBy(arg=>arg.Qwe)
                 .Select(arg => new {arg.Id})
                 .FirstOrDefault(arg2 => arg2.Id != null);
 
@@ -87,7 +126,11 @@ namespace SolrNet.Linq.IntegrationTests
                     ValFloat = SolrExpr.Transformers.Value((float) 2),
                     ValDouble = SolrExpr.Transformers.Value((double) 3),
                     ValDate = SolrExpr.Transformers.Value(dateTime),
-                })
+                    ExplNl = SolrExpr.Transformers.ExplainNl(),
+                    ExplText = SolrExpr.Transformers.ExplainText(),
+                    ExplHtml = SolrExpr.Transformers.ExplainHtml(),
+                    DocId = SolrExpr.Transformers.DocId()
+                }).Skip(1)
                 .First();
 
             Assert.Equal("qwe", t1.ValStr);
@@ -95,6 +138,12 @@ namespace SolrNet.Linq.IntegrationTests
             Assert.Equal(2f, t1.ValFloat);
             Assert.Equal(3d, t1.ValDouble);
             Assert.Equal(dateTime, t1.ValDate);
+
+            Assert.NotNull(t1.ExplText);
+            Assert.NotNull(t1.ExplNl);
+            Assert.NotNull(t1.ExplHtml);
+
+            Assert.Equal(1, t1.DocId);
         }
 
         [Fact]
