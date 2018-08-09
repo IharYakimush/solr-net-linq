@@ -5,13 +5,14 @@ using System.Linq.Expressions;
 using System.Reflection;
 using SolrNet.Commands.Parameters;
 using SolrNet.Linq.Expressions.Context;
+using SolrNet.Linq.Impl;
 
 namespace SolrNet.Linq.Expressions.NodeTypeHelpers
 {
     public static class SelectMethod
     {
         public const string Select = nameof(Queryable.Select);
-        public static bool TryVisitSelect(this MethodCallExpression node, QueryOptions options, MemberContext context, out SelectContext newContext)
+        public static bool TryVisitSelect(this MethodCallExpression node, SelectExpressionsCollection options, MemberContext context, out SelectContext newContext)
         {
             newContext = null;
             bool result = node.Method.DeclaringType == typeof(Queryable) && node.Method.Name == Select;
@@ -36,10 +37,8 @@ namespace SolrNet.Linq.Expressions.NodeTypeHelpers
                     if (newContext != null)
                     {
                         options.Fields.Clear();
-                        foreach (var pairValue in newContext.Aliases.Concat(newContext.Members))
-                        {
-                            options.Fields.Add($"{pairValue.Key.Name}:{pairValue.Value}");
-                        }
+                        SelectFieldsVisitor visitor = new SelectFieldsVisitor(context, options);
+                        visitor.Visit(lambda.Body);                                                
 
                         return result;
                     }

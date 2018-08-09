@@ -47,10 +47,10 @@ namespace SolrNet.Linq
                 return Throw(value);
             }
 
-            public static XElement ExplainNl()
-            {
-                return Throw<XElement>(null);
-            }
+            //public static XElement ExplainNl()
+            //{
+            //    return Throw<XElement>(null);
+            //}
 
             public static string ExplainText()
             {

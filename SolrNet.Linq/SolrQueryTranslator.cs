@@ -5,6 +5,7 @@ using SolrNet.Commands.Parameters;
 using SolrNet.Linq.Expressions;
 using SolrNet.Linq.Expressions.Context;
 using SolrNet.Linq.Expressions.NodeTypeHelpers;
+using SolrNet.Linq.Impl;
 
 namespace SolrNet.Linq
 {
@@ -12,16 +13,19 @@ namespace SolrNet.Linq
     {
         public SolrNetLinqOptions SolrNetLinqOptions { get; }
         public MemberContext Context { get; private set; }
-        public QueryOptions Options { get; } = new QueryOptions();
+        public SelectExpressionsCollection SelectExpressions { get; }
+        public QueryOptions Options { get; }
 
         public ISolrQuery Query { get; } = SolrQuery.All;
 
         public EnumeratedResult EnumeratedResult = EnumeratedResult.None;
 
-        public SolrQueryTranslator(SolrNetLinqOptions solrNetLinqOptions, MemberContext context)
+        public SolrQueryTranslator(SolrNetLinqOptions solrNetLinqOptions, MemberContext context, SelectExpressionsCollection selectExpressions)
         {
             SolrNetLinqOptions = solrNetLinqOptions ?? throw new ArgumentNullException(nameof(solrNetLinqOptions));
             Context = context ?? throw new ArgumentNullException(nameof(context));
+            SelectExpressions = selectExpressions ?? throw new ArgumentNullException(nameof(selectExpressions));
+            Options = selectExpressions.QueryOptions;
         }
 
         public Tuple<ISolrQuery,QueryOptions, EnumeratedResult> Translate<TEntity>(SolrQueryProvider<TEntity> provider, Expression expression)
@@ -41,7 +45,7 @@ namespace SolrNet.Linq
             result = result || node.TryVisitWhere(this.Options, this.Context);
             if (!result)
             {
-                result = node.TryVisitSelect(this.Options, this.Context, out var newContext);
+                result = node.TryVisitSelect(this.SelectExpressions, this.Context, out var newContext);
                 if (result)
                 {
                     this.Context = newContext;

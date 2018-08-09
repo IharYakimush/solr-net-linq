@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="Community.OData.Linq.AspNetCore" Version="1.4.0" />
+    <PackageReference Include="Community.OData.Linq.Json" Version="1.4.0" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="SolrNet.Microsoft.DependencyInjection" Version="1.0.10" />
   </ItemGroup>

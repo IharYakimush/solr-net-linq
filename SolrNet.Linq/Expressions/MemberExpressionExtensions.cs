@@ -37,7 +37,7 @@ namespace SolrNet.Linq.Expressions
             { nameof(SolrExpr.Transformers.Value) + typeof(DateTime).Name ,(c,t) => $"[value v={c.Arguments[0].GetSolrMemberProduct(t)} t=date]" },
 
             { nameof(SolrExpr.Transformers.ExplainHtml) + typeof(string).Name ,(c,t) => "[explain style=html]" },
-            { nameof(SolrExpr.Transformers.ExplainNl) + typeof(XElement).Name ,(c,t) => "[explain style=nl]" },
+            //{ nameof(SolrExpr.Transformers.ExplainNl) + typeof(XElement).Name ,(c,t) => "[explain style=nl]" },
             { nameof(SolrExpr.Transformers.ExplainText) + typeof(string).Name ,(c,t) => "[explain style=text]" },
 
             { nameof(SolrExpr.Transformers.DocId) + typeof(int).Name ,(c,t) => "[docid]" },

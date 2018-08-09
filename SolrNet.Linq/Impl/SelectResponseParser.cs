@@ -8,9 +8,9 @@ using SolrNet.Mapping;
 
 namespace SolrNet.Linq.Impl
 {
-    public class SelectResponseParser<T> : ISolrDocumentResponseParser<T>
+    public class SelectResponseParser<TNew,TOld> : ISolrDocumentResponseParser<TNew>
     {
-        private readonly ConstructorInfo CtorInfo = typeof(T).GetConstructors().Single();
+        private readonly ConstructorInfo CtorInfo = typeof(TNew).GetConstructors().Single();
         private readonly ISolrFieldParser parser ;
 
         public SelectResponseParser(ISolrFieldParser parser)
@@ -18,17 +18,17 @@ namespace SolrNet.Linq.Impl
             this.parser = parser ?? throw new ArgumentNullException(nameof(parser));
         }
 
-        public IList<T> ParseResults(XElement parentNode)
+        public IList<TNew> ParseResults(XElement parentNode)
         {
-            List<T> objList = new List<T>();
+            List<TNew> objList = new List<TNew>();
             if (parentNode == null)
-                return (IList<T>)objList;
+                return (IList<TNew>)objList;
             foreach (XElement element in parentNode.Elements((XName)"doc"))
                 objList.Add(this.ParseDocument(element));
-            return (IList<T>)objList;
+            return (IList<TNew>)objList;
         }
 
-        public T ParseDocument(XElement node)
+        public TNew ParseDocument(XElement node)
         {
             Dictionary<string, XElement> fields = node.Elements().ToDictionary(element => element.Attribute((XName) "name").Value);
            
@@ -76,7 +76,7 @@ namespace SolrNet.Linq.Impl
                 args.Add(obj);
             }
 
-            return (T) CtorInfo.Invoke(args.ToArray());
+            return (TNew) CtorInfo.Invoke(args.ToArray());
         }
     }
 }

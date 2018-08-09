@@ -14,7 +14,7 @@ namespace SolrNet.Linq.IntegrationTests
 
         public decimal Price { get; set; }
 
-        public double Qwe { get; set; }
+        public double Score { get; set; }
     }
     public class SelectTests
     {
@@ -23,10 +23,9 @@ namespace SolrNet.Linq.IntegrationTests
         {
             var t1 = Product.SolrOperations.Value.AsQueryable(lo => lo.SetupQueryOptions = qo =>
                     {
-                        Assert.Equal("Qwe:pow(2,2)", qo.Fields.ElementAt(0));
-                        Assert.Equal("Id:id", qo.Fields.ElementAt(1));
-                        Assert.Equal("Price:price", qo.Fields.ElementAt(2));
-                        Assert.Equal("Categories:cat", qo.Fields.ElementAt(3));
+                        Assert.Equal("id", qo.Fields.ElementAt(0));
+                        Assert.Equal("price", qo.Fields.ElementAt(1));
+                        Assert.Equal("cat", qo.Fields.ElementAt(2));
                     }).Where(p => p.Id != null)
                 .Select(p => new {p.Id, p.Price, p.Categories, Qwe = Math.Pow(2,2) })
                 .Where(arg => arg.Categories.Any(s => s == "electronics"))
@@ -41,12 +40,56 @@ namespace SolrNet.Linq.IntegrationTests
         }
 
         [Fact]
+        public void AnonymousMemberWithConversion()
+        {
+            var t1 = Product.SolrOperations.Value.AsQueryable(lo => lo.SetupQueryOptions = qo =>
+                {
+                    Assert.Equal("id", qo.Fields.ElementAt(0));
+                    Assert.Equal("price", qo.Fields.ElementAt(1));
+                    Assert.Equal("cat", qo.Fields.ElementAt(2));
+                }).Where(p => p.Id != null)
+                .Select(p => new { p.Id, Price = (int)p.Price, p.Categories, Qwe = Math.Pow(2, 2) })
+                .Where(arg => arg.Categories.Any(s => s == "electronics"))
+                .OrderBy(arg => arg.Id)
+                .FirstOrDefault();
+
+            Assert.NotNull(t1);
+            Assert.NotNull(t1.Id);
+            Assert.Equal(4, t1.Qwe);
+            Assert.True(t1.Categories.Count > 0);
+            Assert.True(t1.Price > 0);
+        }
+
+        [Fact]
+        public void AnonymousWithConstAndNext()
+        {
+            var t1 = Product.SolrOperations.Value.AsQueryable(lo => lo.SetupQueryOptions = qo =>
+                {
+                    Assert.Equal("id", qo.Fields.ElementAt(0));
+                    Assert.Equal("price", qo.Fields.ElementAt(1));
+                    Assert.Equal("cat", qo.Fields.ElementAt(2));
+                }).Where(p => p.Id != null)
+                .Select(p => new {p.Id, p.Price, p.Categories, Qwe = "qwe", Next = new {p.Id}})
+                .Where(arg => arg.Categories.Any(s => s == "electronics"))
+                .OrderBy(arg => arg.Id)
+                .FirstOrDefault();
+
+            Assert.NotNull(t1);
+            Assert.NotNull(t1.Id);
+            Assert.NotNull(t1.Next);
+            Assert.Equal(t1.Next.Id, t1.Id);
+            Assert.Equal("qwe", t1.Qwe);
+            Assert.True(t1.Categories.Count > 0);
+            Assert.True(t1.Price > 0);
+        }
+
+        [Fact]
         public void AnonymousIdAndScore()
         {
             var t1 = Product.SolrOperations.Value.AsQueryable(lo => lo.SetupQueryOptions = qo =>
                 {
-                    Assert.Equal("Score:score", qo.Fields.ElementAt(0));
-                    Assert.Equal("Id:id", qo.Fields.ElementAt(1));
+                    Assert.Equal("id", qo.Fields.ElementAt(0));
+                    Assert.Equal("v0:score", qo.Fields.ElementAt(1));
                 })
                 .Select(p => new { p.Id, Score= SolrExpr.Fields.Score()})                
                 .OrderBy(arg => arg.Score)
@@ -58,23 +101,23 @@ namespace SolrNet.Linq.IntegrationTests
         }
 
         [Fact]
-        public void AnonymousOrderByProduct()
+        public void AnonymousOrderByScore()
         {
             var t1 = Product.SolrOperations.Value.AsQueryable(lo => lo.SetupQueryOptions = qo =>
                 {
-                    Assert.Equal("Qwe:pow(2,2)", qo.Fields.ElementAt(0));
-                    Assert.Equal("Id:id", qo.Fields.ElementAt(1));
-                    Assert.Equal("Price:price", qo.Fields.ElementAt(2));
-                    Assert.Equal("Categories:cat", qo.Fields.ElementAt(3));
+                    Assert.Equal("id", qo.Fields.ElementAt(0));
+                    Assert.Equal("price", qo.Fields.ElementAt(1));
+                    Assert.Equal("cat", qo.Fields.ElementAt(2));
+                    Assert.Equal("v0:score", qo.Fields.ElementAt(3));
                 }).Where(p => p.Id != null)
-                .Select(p => new { p.Id, p.Price, p.Categories, Qwe = Math.Pow(2, 2) })
+                .Select(p => new { p.Id, p.Price, p.Categories, Score = SolrExpr.Fields.Score() })
                 .Where(arg => arg.Categories.Any(s => s == "electronics"))
-                .OrderBy(arg => arg.Id).ThenBy(arg=>arg.Qwe)
+                .OrderBy(arg => arg.Id).ThenBy(arg=>arg.Score)
                 .FirstOrDefault();
 
             Assert.NotNull(t1);
             Assert.NotNull(t1.Id);
-            Assert.Equal(4, t1.Qwe);
+            Assert.Equal(1, t1.Score);
             Assert.True(t1.Categories.Count > 0);
             Assert.True(t1.Price > 0);
         }
@@ -102,11 +145,11 @@ namespace SolrNet.Linq.IntegrationTests
                 {
                     Assert.Equal(1, qo.Fields.Count);
                     Assert.Equal(3, qo.FilterQueries.Count);
-                    Assert.Equal("Id:id", qo.Fields.ElementAt(0));
+                    Assert.Equal("id", qo.Fields.ElementAt(0));
                 }).Where(p => p.Id != null)
-                .Select(p => new {p.Id, p.Price, p.Categories, Qwe = Math.Pow(2, 2)})
+                .Select(p => new {p.Id, p.Price, p.Categories})
                 .Where(arg => arg.Categories.Any(s => s == "electronics"))
-                .OrderBy(arg => arg.Id).ThenBy(arg=>arg.Qwe)
+                .OrderBy(arg => arg.Id)
                 .Select(arg => new {arg.Id})
                 .FirstOrDefault(arg2 => arg2.Id != null);
 
@@ -126,7 +169,6 @@ namespace SolrNet.Linq.IntegrationTests
                     ValFloat = SolrExpr.Transformers.Value((float) 2),
                     ValDouble = SolrExpr.Transformers.Value((double) 3),
                     ValDate = SolrExpr.Transformers.Value(dateTime),
-                    ExplNl = SolrExpr.Transformers.ExplainNl(),
                     ExplText = SolrExpr.Transformers.ExplainText(),
                     ExplHtml = SolrExpr.Transformers.ExplainHtml(),
                     DocId = SolrExpr.Transformers.DocId()
@@ -140,7 +182,7 @@ namespace SolrNet.Linq.IntegrationTests
             Assert.Equal(dateTime, t1.ValDate);
 
             Assert.NotNull(t1.ExplText);
-            Assert.NotNull(t1.ExplNl);
+            
             Assert.NotNull(t1.ExplHtml);
 
             Assert.Equal(1, t1.DocId);
@@ -152,22 +194,21 @@ namespace SolrNet.Linq.IntegrationTests
             var t1 = Product.SolrOperations.Value.AsQueryable(lo => lo.SetupQueryOptions = qo =>
                 {
                     Assert.Equal(4, qo.Fields.Count);
-                    Assert.Equal("Qwe:pow(2,2)", qo.Fields.ElementAt(0));
-                    Assert.Equal("Id:id", qo.Fields.ElementAt(1));
-                    Assert.Equal("Price:price", qo.Fields.ElementAt(2));
-                    Assert.Equal("Categories:cat", qo.Fields.ElementAt(3));
+                    Assert.Equal("id", qo.Fields.ElementAt(0));
+                    Assert.Equal("price", qo.Fields.ElementAt(1));
+                    Assert.Equal("cat", qo.Fields.ElementAt(2));
+                    Assert.Equal("v0:score", qo.Fields.ElementAt(3));
 
-                    Assert.Equal(3, qo.OrderBy.Count);
+                    Assert.Equal(2, qo.OrderBy.Count);
                     Assert.Equal("id", qo.OrderBy.ElementAt(0).FieldName);
-                    Assert.Equal("pow(2,2)", qo.OrderBy.ElementAt(1).FieldName);
-                    Assert.Equal("pow(2,3)", qo.OrderBy.ElementAt(2).FieldName);
+                    Assert.Equal("score", qo.OrderBy.ElementAt(1).FieldName);
 
                     Assert.Equal(2, qo.FilterQueries.Count);
 
                 }).Where(p => p.Id != null)
-                .Select(p => new Product2 {Id = p.Id, Price = p.Price, Categories = p.Categories, Qwe = Math.Pow(2, 2)})
+                .Select(p => new Product2 {Id = p.Id, Price = p.Price, Categories = p.Categories, Score = SolrExpr.Fields.Score()})
                 .Where(arg => arg.Categories.Any(s => s == "electronics"))
-                .OrderBy(arg => arg.Id).ThenBy(arg => arg.Qwe).ThenBy(arg => Math.Pow(2,3))
+                .OrderBy(arg => arg.Id).ThenBy(arg => arg.Score)
                 .FirstOrDefault();
 
             Assert.NotNull(t1);
@@ -182,7 +223,7 @@ namespace SolrNet.Linq.IntegrationTests
             Assert.Equal(t2.Id, t1.Id);
 
             SolrQueryResults<Product2> t3 = Product.SolrOperations.Value.AsQueryable().Where(p => p.Id != null)
-                .Select(p => new Product2 {Id = p.Id, Price = p.Price, Categories = p.Categories, Qwe = Math.Pow(2, 2)})
+                .Select(p => new Product2 {Id = p.Id, Price = p.Price, Categories = p.Categories})
                 .Where(arg => arg.Categories.Any(s => s == "electronics"))
                 .OrderBy(arg => arg.Id).Take(1).ToSolrQueryResults();
 
@@ -201,15 +242,14 @@ namespace SolrNet.Linq.IntegrationTests
                     Assert.Equal("Id:id", qo.Fields.ElementAt(2));
                     Assert.Equal("Categories:cat", qo.Fields.ElementAt(3));
 
-                    Assert.Equal(3, qo.OrderBy.Count);
+                    Assert.Equal(2, qo.OrderBy.Count);
                     Assert.Equal("id", qo.OrderBy.ElementAt(0).FieldName);
                     Assert.Equal("sum(price,1)", qo.OrderBy.ElementAt(1).FieldName);
-                    Assert.Equal("pow(2,3)", qo.OrderBy.ElementAt(2).FieldName);
                 }).Where(p => p.Id != null)
                 .Select(p =>
-                    new Product2 {Id = p.Id, Price = p.Price + 1, Categories = p.Categories, Qwe = Math.Pow(2, 2)})
+                    new Product2 {Id = p.Id, Price = p.Price + 1, Categories = p.Categories})
                 .Where(arg => arg.Categories.Any(s => s == "electronics"))
-                .OrderBy(arg => arg.Id).ThenBy(arg => arg.Price).ThenBy(arg => Math.Pow(2, 3))
+                .OrderBy(arg => arg.Id).ThenBy(arg => arg.Price)
                 .FirstOrDefault());
         }
     }

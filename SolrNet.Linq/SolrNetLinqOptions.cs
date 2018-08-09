@@ -32,9 +32,9 @@ namespace SolrNet.Linq
         /// </summary>
         public IReadOnlyMappingManager MappingManager { get; set; } = null;
 
-        /// <summary>
-        /// Set solr field parser which will be used in case of Select() method applying. If not set <see cref="DefaultFieldParser"/> will be used.
-        /// </summary>
-        public ISolrFieldParser SolrFieldParser { get; set; } = null;
+        ///// <summary>
+        ///// Set solr field parser which will be used in case of Select() method applying. If not set <see cref="DefaultFieldParser"/> will be used.
+        ///// </summary>
+        //public ISolrFieldParser SolrFieldParser { get; set; } = null;
     }
 }
