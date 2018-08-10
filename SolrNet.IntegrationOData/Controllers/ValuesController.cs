@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Community.OData.Linq;
 using Community.OData.Linq.AspNetCore;
+using Community.OData.Linq.Json;
 using Microsoft.AspNetCore.Mvc;
 using SolrNet.Impl.FieldSerializers;
 using SolrNet.Linq;
@@ -31,12 +32,13 @@ namespace SolrNet.IntegrationOData.Controllers
                 "/api/values/1?$filter=Popularity ne null",
                 "/api/values/1?$filter=Popularity eq null",
                 "/api/values/1?$filter=Categories/any(c: c eq 'electronics')",
+                "/api/values/2?$select=Id,Price,Categories",
             });
         }
 
         // GET api/values/5
-        [HttpGet("{id}")]
-        public ActionResult<string> Get(int id, ODataQueryOptions odata)
+        [HttpGet("1")]
+        public ActionResult<string> Get1(ODataQueryOptions odata)
         {
             IQueryable<Product> query = this.Solr.AsQueryable(options =>
             {
@@ -61,22 +63,13 @@ namespace SolrNet.IntegrationOData.Controllers
             return this.Ok(query.OData().ApplyQueryOptionsWithoutSelectExpand(odata).ToSolrQueryResults());
         }
 
-        // POST api/values
-        [HttpPost]
-        public void Post([FromBody] string value)
+        // GET api/values/5
+        [HttpGet("2")]
+        public ActionResult<string> Get2(ODataQueryOptions odata)
         {
-        }
+            IQueryable<Product> query = this.Solr.AsQueryable();
 
-        // PUT api/values/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-        // DELETE api/values/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+            return this.Ok(query.OData().ApplyQueryOptions(odata).ToJson());
         }
     }
 }

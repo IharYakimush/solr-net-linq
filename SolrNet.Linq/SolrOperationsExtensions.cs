@@ -15,7 +15,7 @@ namespace SolrNet.Linq
             setupOptions?.Invoke(options);
             return new SolrQuery<T>(new SolrQueryProvider<T>(
                 new SolrQueryExecuterWrapperBasicOperations<T>(operations),
-                options, null));
+                options, null, null));
         }       
 
         public static SolrQueryResults<T> ToSolrQueryResults<T>(this IQueryable<T> queryable)

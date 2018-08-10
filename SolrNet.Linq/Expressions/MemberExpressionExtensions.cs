@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Xml.Linq;
 using SolrNet.Impl;
 using SolrNet.Linq.Expressions.Context;
 
@@ -34,6 +35,17 @@ namespace SolrNet.Linq.Expressions
             { nameof(SolrExpr.Transformers.Value) + typeof(float).Name ,(c,t) => $"[value v={c.Arguments[0].GetSolrMemberProduct(t)} t=float]" },
             { nameof(SolrExpr.Transformers.Value) + typeof(double).Name ,(c,t) => $"[value v={c.Arguments[0].GetSolrMemberProduct(t)} t=double]" },
             { nameof(SolrExpr.Transformers.Value) + typeof(DateTime).Name ,(c,t) => $"[value v={c.Arguments[0].GetSolrMemberProduct(t)} t=date]" },
+
+            { nameof(SolrExpr.Transformers.ExplainHtml) + typeof(string).Name ,(c,t) => "[explain style=html]" },
+            //{ nameof(SolrExpr.Transformers.ExplainNl) + typeof(XElement).Name ,(c,t) => "[explain style=nl]" },
+            { nameof(SolrExpr.Transformers.ExplainText) + typeof(string).Name ,(c,t) => "[explain style=text]" },
+
+            { nameof(SolrExpr.Transformers.DocId) + typeof(int).Name ,(c,t) => "[docid]" },
+
+        };
+        private static readonly Dictionary<string, Func<MethodCallExpression, MemberContext, string>> FieldsHelper = new Dictionary<string, Func<MethodCallExpression, MemberContext, string>> {
+            { nameof(SolrExpr.Fields.Score) ,(c,t) => "score" },
+
         };
 
         internal static string GetSolrMemberProduct(this Expression exp, MemberContext context, bool disableFunctions = false)
@@ -84,6 +96,14 @@ namespace SolrNet.Linq.Expressions
                             if (TransformersHelper.ContainsKey(tkey))
                             {
                                 return TransformersHelper[tkey].Invoke(call, context);
+                            }
+                        }
+
+                        if (call.Method.DeclaringType == typeof(SolrExpr.Fields))
+                        {
+                            if (FieldsHelper.ContainsKey(call.Method.Name))
+                            {
+                                return FieldsHelper[call.Method.Name].Invoke(call, context);
                             }
                         }
                     }                    

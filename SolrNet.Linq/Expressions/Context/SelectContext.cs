@@ -14,6 +14,8 @@ namespace SolrNet.Linq.Expressions.Context
         public Dictionary<MemberInfo, string> Members { get; } = new Dictionary<MemberInfo, string>();
         public Dictionary<MemberInfo, string> Aliases { get; } = new Dictionary<MemberInfo, string>();
 
+        public Dictionary<MemberInfo, Expression> Calculated { get; } = new Dictionary<MemberInfo, Expression>();
+
         public SelectContext(NewExpression expression, MemberContext parentContext)
         {
             NewExpression = expression ?? throw new ArgumentNullException(nameof(expression));
@@ -22,13 +24,19 @@ namespace SolrNet.Linq.Expressions.Context
             for (int i = 0; i < expression.Arguments.Count; i++)
             {
                 Expression argument = expression.Arguments[i];
-                if (argument.NodeType != ExpressionType.MemberAccess)
+                if (argument is MemberExpression me && parentContext.IsAccessToMember(me))
+                {
+                    Members.Add(expression.Members[i], parentContext.GetSolrMemberProduct(argument, true));
+                }
+                else if (argument is MethodCallExpression mc &&
+                         (mc.Method.DeclaringType == typeof(SolrExpr.Transformers) ||
+                          mc.Method.DeclaringType == typeof(SolrExpr.Fields)))
                 {
                     Aliases.Add(expression.Members[i], parentContext.GetSolrMemberProduct(argument));
                 }
                 else
                 {
-                    Members.Add(expression.Members[i], parentContext.GetSolrMemberProduct(argument, true));
+                    Calculated.Add(expression.Members[i], argument);
                 }
             }            
         }
@@ -40,13 +48,19 @@ namespace SolrNet.Linq.Expressions.Context
 
             foreach (MemberAssignment binding in expression.Bindings.OfType<MemberAssignment>())
             {
-                if (binding.Expression.NodeType != ExpressionType.MemberAccess)
+                if (binding.Expression is MemberExpression me && parentContext.IsAccessToMember(me))
+                {
+                    Members.Add(binding.Member, parentContext.GetSolrMemberProduct(binding.Expression, true));
+                }
+                else if (binding.Expression is MethodCallExpression mc &&
+                         (mc.Method.DeclaringType == typeof(SolrExpr.Transformers) ||
+                          mc.Method.DeclaringType == typeof(SolrExpr.Fields)))
                 {
                     Aliases.Add(binding.Member, parentContext.GetSolrMemberProduct(binding.Expression));
                 }
                 else
                 {
-                    Members.Add(binding.Member, parentContext.GetSolrMemberProduct(binding.Expression, true));
+                    Calculated.Add(binding.Member, binding.Expression);
                 }
             }
         }
@@ -69,6 +83,11 @@ namespace SolrNet.Linq.Expressions.Context
                 if (Aliases.ContainsKey(me.Member) && disableFunctions == false)
                 {
                     return Aliases[me.Member];
+                }
+
+                if (Calculated.ContainsKey(me.Member) && disableFunctions == false)
+                {
+                    return ParentContext.GetSolrMemberProduct(Calculated[me.Member]);
                 }
             }
 

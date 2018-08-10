@@ -15,10 +15,18 @@ namespace SolrNet.Linq
         public IExecuter<TEntity> Operations { get; }
         public SolrNetLinqOptions Options { get; }
 
-        public SolrQueryProvider(IExecuter<TEntity> operations, SolrNetLinqOptions options, MemberContext context)
+        private SelectExpressionsCollection SelectExpressions { get; } 
+            
+
+        public SolrQueryProvider(
+            IExecuter<TEntity> operations, 
+            SolrNetLinqOptions options, 
+            MemberContext context,
+            SelectExpressionsCollection selectExpressions)
         {
             Operations = operations ?? throw new ArgumentNullException(nameof(operations));
             Options = options ?? throw new ArgumentNullException(nameof(options));
+            SelectExpressions = selectExpressions ?? new SelectExpressionsCollection();
 
             if (context == null)
             {
@@ -51,11 +59,13 @@ namespace SolrNet.Linq
                         Activator.CreateInstance(
                             typeof(SolrQueryProvider<>).MakeGenericType(elementType),
                             typeof(ExecuterExtensions)
-                                .GetMethod(nameof(ExecuterExtensions.ChangeType), BindingFlags.Public | BindingFlags.Static)
+                                .GetMethod(nameof(ExecuterExtensions.ChangeType),
+                                    BindingFlags.Public | BindingFlags.Static)
                                 .MakeGenericMethod(elementType, typeof(TEntity))
-                                .Invoke(null, new object[] {this.Operations, this.Options.SolrFieldParser }),
+                                .Invoke(null, new object[] {this.Operations, se, this.SelectExpressions}),
                             this.Options,
-                            this.MemberContext),
+                            this.MemberContext,
+                            this.SelectExpressions),
                         expression);
                 }
             }
@@ -96,7 +106,8 @@ namespace SolrNet.Linq
 
         private Tuple<ISolrQuery, QueryOptions, EnumeratedResult> Translate(Expression expression)
         {
-            SolrQueryTranslator translator = new SolrQueryTranslator(this.Options, this.MemberContext);
+            SolrQueryTranslator translator =
+                new SolrQueryTranslator(this.Options, this.MemberContext, this.SelectExpressions);
             Tuple<ISolrQuery, QueryOptions, EnumeratedResult> result = translator.Translate(this, expression);
             this.Options.SetupQueryOptions?.Invoke(result.Item2);
             return result;

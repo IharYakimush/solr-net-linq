@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using SolrNet.Impl;
@@ -10,34 +12,31 @@ using SolrNet.Mapping;
 
 namespace SolrNet.Linq.Impl
 {
-    public static class ExecuterExtensions
+    internal static class ExecuterExtensions
     {
-        public static IExecuter<TNew> ChangeType<TNew, TOld>(this IExecuter<TOld> executer, ISolrFieldParser sfp = null)
+        public static IExecuter<TNew> ChangeType<TNew, TOld>(this IExecuter<TOld> executer, MethodCallExpression selectExpression, SelectExpressionsCollection selectExpressionsCollection)
         {
+            if (executer == null) throw new ArgumentNullException(nameof(executer));
+            if (selectExpression == null) throw new ArgumentNullException(nameof(selectExpression));
+            if (selectExpressionsCollection == null) throw new ArgumentNullException(nameof(selectExpressionsCollection));
+
             try
             {
                 SolrQueryExecuter<TOld> oldExecuter = executer.Executer;
 
-                ISolrConnection connection = oldExecuter.GetSingleField<ISolrConnection>();
-                ISolrQuerySerializer serializer = oldExecuter.GetSingleField<ISolrQuerySerializer>();
-                ISolrFacetQuerySerializer facetQuerySerializer = oldExecuter.GetSingleField<ISolrFacetQuerySerializer>();
+                ISolrConnection connection = oldExecuter.GetFieldRecursive<ISolrConnection>();
+                ISolrQuerySerializer serializer = oldExecuter.GetFieldRecursive<ISolrQuerySerializer>();
+                ISolrFacetQuerySerializer facetQuerySerializer = oldExecuter.GetFieldRecursive<ISolrFacetQuerySerializer>();                
 
-                sfp = sfp ?? new DefaultFieldParser();
-                ISolrDocumentResponseParser<TNew> docParser;
+                ISolrDocumentResponseParser<TOld> oldParser =
+                    oldExecuter.GetFieldRecursive<ISolrDocumentResponseParser<TOld>>();
 
-                // Anonymous types can't be created by default SolrNet parsers, because the don't have property setters.
-                if (CheckIfAnonymousType(typeof(TNew)))
-                {
-                    docParser =
-                        new SelectResponseParser<TNew>(sfp);
-                }
-                else
-                {
-                    IReadOnlyMappingManager mapper = new AllPropertiesMappingManager();
-                    docParser = new SolrDocumentResponseParser<TNew>(mapper, new DefaultDocumentVisitor(mapper, sfp),
-                        new SolrDocumentActivator<TNew>());
-                }
-                
+                ISolrFieldParser fieldParser = oldParser.GetFieldRecursive<ISolrFieldParser>();
+
+                ISolrDocumentResponseParser<TNew> docParser = new SelectResponseParser2<TNew, TOld>(oldParser,
+                    new SolrDictionaryDocumentResponseParser(fieldParser), selectExpression,
+                    selectExpressionsCollection);
+                                
                 ISolrAbstractResponseParser<TNew> parser = new DefaultResponseParser<TNew>(docParser);
 
                 SolrQueryExecuter<TNew> newExecuter = new SolrQueryExecuter<TNew>(parser, connection, serializer,
@@ -54,21 +53,75 @@ namespace SolrNet.Linq.Impl
             {
                 throw new InvalidOperationException(
                     $"Unable to change solr query executer from {typeof(TOld)} to {typeof(TNew)}.", e);
-            }                       
+            }
         }
 
-        internal static T GetSingleField<T>(this object instance)
+        //internal static T GetSingleField<T>(this object instance)
+        //{
+        //    if (instance == null) throw new ArgumentNullException(nameof(instance));
+
+        //    BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
+        //                             | BindingFlags.Static;
+
+        //    Type type = instance.GetType();
+
+        //    FieldInfo field = type.GetFields(bindFlags).Single(info => info.FieldType == typeof(T));
+            
+        //    return (T)field.GetValue(instance);
+        //}
+
+        internal static T GetFieldRecursive<T>(this object instance, int limit = 5) where T:class 
         {
             if (instance == null) throw new ArgumentNullException(nameof(instance));
 
-            BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
-                                     | BindingFlags.Static;
+            BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
             Type type = instance.GetType();
-
-            FieldInfo field = type.GetFields(bindFlags).Single(info => info.FieldType == typeof(T));
+            FieldInfo[] fields = type.GetFields(bindFlags);
             
-            return (T)field.GetValue(instance);
+
+            foreach (FieldInfo field in fields
+                .OrderBy(info => typeof(T).IsAssignableFrom(info.FieldType) ? 0 : 1)
+                .ThenBy(info => (info.GetValue(instance) as IEnumerable) == null ? 0: 1))
+            {
+                if (typeof(T).IsAssignableFrom(field.FieldType))
+                {
+                    return (T)field.GetValue(instance);
+                }
+
+                object fieldValue = field.GetValue(instance);
+
+                if (fieldValue != null)
+                {
+                    if (limit > 0)
+                    {
+                        if (fieldValue is IEnumerable enumerable)
+                        {
+                            foreach (object obj in enumerable)
+                            {
+                                T inner = obj.GetFieldRecursive<T>(limit - 1);
+
+                                if (inner != null)
+                                {
+                                    return inner;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            T inner = fieldValue.GetFieldRecursive<T>(limit - 1);
+
+                            if (inner != null)
+                            {
+                                return inner;
+                            }
+                        }
+                        
+                    }                    
+                }
+            }
+
+            return null;
         }
 
         private static bool CheckIfAnonymousType(Type type)

@@ -27,21 +27,27 @@ namespace SolrNet.Linq.Impl
         {
             get
             {
-                if (this._basicOperations is SolrBasicServer<T> sbs)
+                SolrQueryExecuter<T> result = this._basicOperations.GetFieldRecursive<ISolrQueryExecuter<T>>() as SolrQueryExecuter<T>;
+
+                if (result == null)
                 {
-                    return sbs.GetSingleField<ISolrQueryExecuter<T>>() as SolrQueryExecuter<T>;
+                    throw new InvalidOperationException(
+                        $"Unable to get executer from current instance of type {_basicOperations.GetType()}");
                 }
 
-                if (this._basicOperations is SolrServer<T> srv)
-                {
-                    if (srv.GetSingleField<ISolrBasicOperations<T>>() is SolrBasicServer<T> sbs2)
-                    {
-                        return sbs2.GetSingleField<ISolrQueryExecuter<T>>() as SolrQueryExecuter<T>;
-                    }
-                }
+                return result;
+                //if (this._basicOperations is SolrBasicServer<T> sbs)
+                //{
+                //    return sbs.GetSingleField<ISolrQueryExecuter<T>>() as SolrQueryExecuter<T>;
+                //}
 
-                throw new InvalidOperationException(
-                    $"Unable to get executer from current instance of type {_basicOperations.GetType()}");
+                //if (this._basicOperations is SolrServer<T> srv)
+                //{
+                //    if (srv.GetSingleField<ISolrBasicOperations<T>>() is SolrBasicServer<T> sbs2)
+                //    {
+                //        return sbs2.GetSingleField<ISolrQueryExecuter<T>>() as SolrQueryExecuter<T>;
+                //    }
+                //}                
             }
         }
     }

@@ -102,6 +102,30 @@ IQueryable<Product> solrLinq = solr.AsQueryable(setup =>
   // cat:(qwe)
   Product[] result = solrLinq.Where(p => p.Categories.Any(s => s == "qwe")).ToArray();
   ```
+  ### Select
+  - Anonymous and regular types with fields, pseudo field, functions and transformers
+  ```
+  var result = solrLinq.Select(p => 
+      new {
+              p.Id, 
+	          p.Categories, 
+	          Qwe = Math.Pow(2,2), // evaluated locally
+              Next = new Product2 {Id = p.Id} // evaluated locally after selecting required info from solr
+	          ValStr = SolrExpr.Transformers.Value("qwe"), // value transformer evaluated in solr
+	          Score= SolrExpr.Fields.Score() // score pseudo field evaluated in solr
+	      }).OrderBy(arg => arg.Score) // allowed to use expressions evaluated in solr for ordering
+		  .ToSolrQueryResults();
+  ```
+  - Combine Select with other methods
+  ```
+  var result = solrLinq
+	.Where(p => p.Id != null)
+    .Select(p => new {p.Id, p.Price, p.Categories, Score= SolrExpr.Fields.Score()})
+    .Where(arg => arg.Categories.Any(s => s == "electronics"))
+    .OrderBy(arg => arg.Id).ThenBy(arg=>arg.Score) 
+    .Select(arg => new {arg.Id})
+    .FirstOrDefault(arg2 => arg2.Id != null);
+  ```
   ### Paging
   - Top
   - Skip
