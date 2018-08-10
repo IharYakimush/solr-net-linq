@@ -1,5 +1,5 @@
-# solr-net-linq
-SolrNet IQueryable provider. Extend SolrNet functionality by adding limited LINQ to SOLR support.
+ # solr-net-linq
+SolrNet IQueryable provider. Extend SolrNet functionality by adding limited LINQ to SOLR support. Compatible with OData.
 
 ## Code Sample
 ### Prerequisites
