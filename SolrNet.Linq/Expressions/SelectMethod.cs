@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using SolrNet.Commands.Parameters;
 using SolrNet.Linq.Expressions.Context;
 using SolrNet.Linq.Impl;
 
-namespace SolrNet.Linq.Expressions.NodeTypeHelpers
+namespace SolrNet.Linq.Expressions
 {
     public static class SelectMethod
     {
