@@ -110,7 +110,7 @@ IQueryable<Product> solrLinq = solr.AsQueryable(setup =>
               p.Id, 
 	          p.Categories, 
 	          Qwe = Math.Pow(2,2), // evaluated locally
-			  Next = new Product2 {Id = p.Id} // evaluated locally after selecting required info from solr
+              Next = new Product2 {Id = p.Id} // evaluated locally after selecting required info from solr
 	          ValStr = SolrExpr.Transformers.Value("qwe"), // value transformer evaluated in solr
 	          Score= SolrExpr.Fields.Score() // score pseudo field evaluated in solr
 	      }).OrderBy(arg => arg.Score) // allowed to use expressions evaluated in solr for ordering
