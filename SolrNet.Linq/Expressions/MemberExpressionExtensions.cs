@@ -48,7 +48,6 @@ namespace SolrNet.Linq.Expressions
 
         };
 
-
         internal static string GetSolrMemberProduct(this Expression exp, MemberContext context, bool disableFunctions = false)
         {
             try

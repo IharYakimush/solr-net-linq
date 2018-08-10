@@ -13,7 +13,8 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Version>1.3.0</Version>
-    <PackageReleaseNotes>support Any(), Count(), LongCount() methods and its async versions</PackageReleaseNotes>
+    <PackageReleaseNotes>Added support for Select() method. Compatible with OData way of building select expression.
+Added support for Any(), Count(), LongCount() methods and its async versions</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

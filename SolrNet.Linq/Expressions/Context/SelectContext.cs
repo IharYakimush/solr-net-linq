@@ -14,7 +14,7 @@ namespace SolrNet.Linq.Expressions.Context
         public Dictionary<MemberInfo, string> Members { get; } = new Dictionary<MemberInfo, string>();
         public Dictionary<MemberInfo, string> Aliases { get; } = new Dictionary<MemberInfo, string>();
 
-        public List<Expression> Calculated { get; } = new List<Expression>();
+        public Dictionary<MemberInfo, Expression> Calculated { get; } = new Dictionary<MemberInfo, Expression>();
 
         public SelectContext(NewExpression expression, MemberContext parentContext)
         {
@@ -36,7 +36,7 @@ namespace SolrNet.Linq.Expressions.Context
                 }
                 else
                 {
-                    Calculated.Add(argument);
+                    Calculated.Add(expression.Members[i], argument);
                 }
             }            
         }
@@ -60,7 +60,7 @@ namespace SolrNet.Linq.Expressions.Context
                 }
                 else
                 {
-                    Calculated.Add(binding.Expression);
+                    Calculated.Add(binding.Member, binding.Expression);
                 }
             }
         }
@@ -83,6 +83,11 @@ namespace SolrNet.Linq.Expressions.Context
                 if (Aliases.ContainsKey(me.Member) && disableFunctions == false)
                 {
                     return Aliases[me.Member];
+                }
+
+                if (Calculated.ContainsKey(me.Member) && disableFunctions == false)
+                {
+                    return ParentContext.GetSolrMemberProduct(Calculated[me.Member]);
                 }
             }
 
