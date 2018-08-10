@@ -109,7 +109,8 @@ IQueryable<Product> solrLinq = solr.AsQueryable(setup =>
       new {
               p.Id, 
 	          p.Categories, 
-	          Qwe = Math.Pow(2,2), // will be evaluated locally
+	          Qwe = Math.Pow(2,2), // evaluated locally
+			  Next = new { p.Id, SomeConst="qwe" } // evaluated locally after selecting required info from solr
 	          ValStr = SolrExpr.Transformers.Value("qwe"), // value transformer evaluated in solr
 	          Score= SolrExpr.Fields.Score() // score pseudo field evaluated in solr
 	      }).OrderBy(arg => arg.Score) // allowed to use expressions evaluated in solr for ordering
@@ -118,7 +119,13 @@ IQueryable<Product> solrLinq = solr.AsQueryable(setup =>
   ### Select
   - Existing type by member initialization
   ```
-  var result = solrLinq.Select(p => new Product2 {Id = p.Id, Price = p.Price, Categories = p.Categories, Qwe = Math.Pow(2, 2)}).ToArray();
+  var result = solrLinq.Select(p => 
+      new Product2 {
+	      Id = p.Id, 
+		  Price = p.Price + 1,
+		  Categories = p.Categories, 
+		  Qwe = Math.Pow(2, 2)
+      }).ToArray();
   ```
   - Combine Select with other methods
   ```
