@@ -89,7 +89,7 @@ namespace SolrNet.Linq.IntegrationTests
             var t1 = Product.SolrOperations.Value.AsQueryable(lo => lo.SetupQueryOptions = qo =>
                 {
                     Assert.Equal("id", qo.Fields.ElementAt(0));
-                    Assert.Equal("v0:score", qo.Fields.ElementAt(1));
+                    Assert.Equal("v1731e0:score", qo.Fields.ElementAt(1));
                 })
                 .Select(p => new { p.Id, Score= SolrExpr.Fields.Score()})                
                 .OrderBy(arg => arg.Score)
@@ -108,7 +108,7 @@ namespace SolrNet.Linq.IntegrationTests
                     Assert.Equal("id", qo.Fields.ElementAt(0));
                     Assert.Equal("price", qo.Fields.ElementAt(1));
                     Assert.Equal("cat", qo.Fields.ElementAt(2));
-                    Assert.Equal("v0:score", qo.Fields.ElementAt(3));
+                    Assert.Equal("v1731e0:score", qo.Fields.ElementAt(3));
                 }).Where(p => p.Id != null)
                 .Select(p => new { p.Id, p.Price, p.Categories, Score = SolrExpr.Fields.Score() })
                 .Where(arg => arg.Categories.Any(s => s == "electronics"))
@@ -197,7 +197,7 @@ namespace SolrNet.Linq.IntegrationTests
                     Assert.Equal("id", qo.Fields.ElementAt(0));
                     Assert.Equal("price", qo.Fields.ElementAt(1));
                     Assert.Equal("cat", qo.Fields.ElementAt(2));
-                    Assert.Equal("v0:score", qo.Fields.ElementAt(3));
+                    Assert.Equal("v1731e0:score", qo.Fields.ElementAt(3));
 
                     Assert.Equal(2, qo.OrderBy.Count);
                     Assert.Equal("id", qo.OrderBy.ElementAt(0).FieldName);
@@ -239,7 +239,7 @@ namespace SolrNet.Linq.IntegrationTests
                     Assert.Equal(3, qo.Fields.Count);
                     Assert.Equal("id", qo.Fields.ElementAt(0));
                     Assert.Equal("price", qo.Fields.ElementAt(1));
-                    Assert.Equal("v0:score", qo.Fields.ElementAt(2));
+                    Assert.Equal("v1731e0:score", qo.Fields.ElementAt(2));
 
                     Assert.Equal(3, qo.OrderBy.Count);
                     Assert.Equal("id", qo.OrderBy.ElementAt(0).FieldName);

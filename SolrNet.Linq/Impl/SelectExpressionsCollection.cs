@@ -25,7 +25,7 @@ namespace SolrNet.Linq.Impl
             string alias;
             if (existing == null)
             {
-                alias = $"v{this._identity}";
+                alias = $"v1731e{this._identity}";
                 this.QueryOptions.Fields.Add($"{alias}:{value}");                
                 this._identity++;
             }
