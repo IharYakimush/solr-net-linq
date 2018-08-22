@@ -139,6 +139,33 @@ namespace SolrNet.Linq.IntegrationTests
         }
 
         [Fact]
+        public void SelectDerivedClassCast()
+        {
+            IQueryable<DerivedProduct> derivedProducts = Product.SolrOperations.Value.AsQueryable().Where(p => p.Id != null)
+                .Select(p => new DerivedProduct{Id2 = p.Id}).Where(p => p.Id2 != null);
+
+            IQueryable<Product> q2 = derivedProducts.Cast<Product>();
+
+            var t1 = q2.ToSolrQueryResults();
+
+            Assert.NotNull(t1);
+            Assert.NotNull(t1[0].Id);
+            Assert.True(t1.NumFound > 0);
+        }
+
+        [Fact]
+        public void SelectSameParameter()
+        {
+            var t1 = Product.SolrOperations.Value.AsQueryable().Where(p => p.Id != null)
+                .Select(p => p).Where(p => p.Id != null)
+                .ToSolrQueryResults();
+
+            Assert.NotNull(t1);
+            Assert.NotNull(t1[0].Id);
+            Assert.True(t1.NumFound > 0);
+        }
+
+        [Fact]
         public void MultipleSelects()
         {
             var t1 = Product.SolrOperations.Value.AsQueryable(lo => lo.SetupQueryOptions = qo =>

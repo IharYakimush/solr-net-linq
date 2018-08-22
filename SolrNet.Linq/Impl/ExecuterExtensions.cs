@@ -14,7 +14,10 @@ namespace SolrNet.Linq.Impl
 {
     internal static class ExecuterExtensions
     {
-        public static IExecuter<TNew> ChangeType<TNew, TOld>(this IExecuter<TOld> executer, MethodCallExpression selectExpression, SelectExpressionsCollection selectExpressionsCollection)
+        public static IExecuter<TNew> ChangeType<TNew, TOld>(
+            this IExecuter<TOld> executer, 
+            MethodCallExpression selectExpression, 
+            SelectExpressionsCollection selectExpressionsCollection)
         {
             if (executer == null) throw new ArgumentNullException(nameof(executer));
             if (selectExpression == null) throw new ArgumentNullException(nameof(selectExpression));
