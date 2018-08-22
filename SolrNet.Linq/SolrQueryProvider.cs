@@ -51,8 +51,12 @@ namespace SolrNet.Linq
 
             if (expression is MethodCallExpression se)
             {
-                if (se.Arguments.Count > 1 && se.Method.DeclaringType == typeof(Queryable) &&
-                    se.Method.Name == nameof(Queryable.Select))
+                bool isSelect = se.Arguments.Count == 2 && se.Method.DeclaringType == typeof(Queryable) &&
+                                se.Method.Name == nameof(Queryable.Select);
+
+                bool isCast = se.Arguments.Count ==1 && se.Method.DeclaringType == typeof(Queryable) &&
+                                se.Method.Name == nameof(Queryable.Cast);
+                if (isSelect || isCast)
                 {
                     return (IQueryable) Activator.CreateInstance(
                         typeof(SolrQuery<>).MakeGenericType(elementType),

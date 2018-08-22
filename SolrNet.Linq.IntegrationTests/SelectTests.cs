@@ -139,7 +139,7 @@ namespace SolrNet.Linq.IntegrationTests
         }
 
         [Fact]
-        public void SelectDerivedClassCast()
+        public void SelectDerivedWithCast()
         {
             IQueryable<DerivedProduct> derivedProducts = Product.SolrOperations.Value.AsQueryable().Where(p => p.Id != null)
                 .Select(p => new DerivedProduct{Id2 = p.Id}).Where(p => p.Id2 != null);

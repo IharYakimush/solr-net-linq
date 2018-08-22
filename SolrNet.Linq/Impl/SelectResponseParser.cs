@@ -1,82 +1,55 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+using System.Linq.Expressions;
 using System.Xml.Linq;
 using SolrNet.Impl;
-using SolrNet.Mapping;
+using SolrNet.Linq.Expressions;
 
 namespace SolrNet.Linq.Impl
 {
     public class SelectResponseParser<TNew,TOld> : ISolrDocumentResponseParser<TNew>
     {
-        private readonly ConstructorInfo CtorInfo = typeof(TNew).GetConstructors().Single();
-        private readonly ISolrFieldParser parser ;
+        private readonly ISolrDocumentResponseParser<TOld> _inner;
+        private readonly ISolrDocumentResponseParser<Dictionary<string, object>> _dictionaryParser;
+        private readonly MethodCallExpression _selectCall;
+        private readonly SelectExpressionsCollection _selectState;
 
-        public SelectResponseParser(ISolrFieldParser parser)
+        public SelectResponseParser(ISolrDocumentResponseParser<TOld> inner, ISolrDocumentResponseParser<Dictionary<string, object>> dictionaryParser, MethodCallExpression selectCall, SelectExpressionsCollection selectState)
         {
-            this.parser = parser ?? throw new ArgumentNullException(nameof(parser));
+            _inner = inner ?? throw new ArgumentNullException(nameof(inner));
+            _dictionaryParser = dictionaryParser ?? throw new ArgumentNullException(nameof(dictionaryParser));
+            _selectCall = selectCall;
+            _selectState = selectState;
         }
-
         public IList<TNew> ParseResults(XElement parentNode)
         {
-            List<TNew> objList = new List<TNew>();
             if (parentNode == null)
-                return (IList<TNew>)objList;
-            foreach (XElement element in parentNode.Elements((XName)"doc"))
-                objList.Add(this.ParseDocument(element));
-            return (IList<TNew>)objList;
-        }
+                return null;
 
-        public TNew ParseDocument(XElement node)
-        {
-            Dictionary<string, XElement> fields = node.Elements().ToDictionary(element => element.Attribute((XName) "name").Value);
-           
-            List<object> args = new List<object>(fields.Count);
-            foreach (ParameterInfo p in CtorInfo.GetParameters())
+            List<TNew> result = new List<TNew>();
+            var docs = this._dictionaryParser.ParseResults(parentNode);
+            IList<TOld> olds = this._inner.ParseResults(parentNode);
+
+            for (int i = 0; i < olds.Count; i++)
             {
-                object obj = p.ParameterType.IsValueType ? Activator.CreateInstance(p.ParameterType) : null;
-                if (fields.ContainsKey(p.Name))
-                {
-                    if (p.ParameterType == typeof(XElement))
-                    {
-                        string text = fields[p.Name].ToString();
-                        try
-                        {
-                            
-                            obj = XElement.Parse(text);
-                        }
-                        catch (Exception e)
-                        {
-                            throw new InvalidOperationException(
-                                $"Unable to set value for {p.Name}. Value {text} can't be parsed to XElement",e);
-                        }                        
-                    }
-                    else if (this.parser.CanHandleSolrType(fields[p.Name].Name.LocalName) &&
-                        this.parser.CanHandleType(p.ParameterType))
-                    {
-                        obj = this.parser.Parse(fields[p.Name], p.ParameterType);
-
-                        if (obj != null)
-                        {
-                            if (!p.ParameterType.IsAssignableFrom(obj.GetType()))
-                            {
-                                throw new InvalidOperationException(
-                                    $"Unable to set value for {p.Name}. Value {obj} of type {obj.GetType()} not assignable to type {p.ParameterType}");
-                            }
-                        }
-                        else if (p.ParameterType.IsValueType)
-                        {
-                            throw new InvalidOperationException(
-                                $"Unable to set value for {p.Name}. Value null not assignable to type {p.ParameterType}");
-                        }
-                    }
-                }
-
-                args.Add(obj);
+                result.Add(this.GetResult(olds[i], docs[i]));
             }
 
-            return (TNew) CtorInfo.Invoke(args.ToArray());
+            return result;
+        }
+
+        private TNew GetResult(TOld old, Dictionary<string, object> dictionary)
+        {
+            ReplaceCalculatedVisitor visitor = new ReplaceCalculatedVisitor(this._selectState, dictionary);
+
+            LambdaExpression lambdaExpression = (LambdaExpression)this._selectCall.Arguments[1].StripQuotes();
+
+            LambdaExpression expression = (LambdaExpression)visitor.Visit(lambdaExpression);
+
+            object result = expression.Compile().DynamicInvoke(old);
+
+            return (TNew) result;
         }
     }
 }

@@ -16,11 +16,11 @@ namespace SolrNet.Linq.Impl
     {
         public static IExecuter<TNew> ChangeType<TNew, TOld>(
             this IExecuter<TOld> executer, 
-            MethodCallExpression selectExpression, 
+            MethodCallExpression expression, 
             SelectExpressionsCollection selectExpressionsCollection)
         {
             if (executer == null) throw new ArgumentNullException(nameof(executer));
-            if (selectExpression == null) throw new ArgumentNullException(nameof(selectExpression));
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
             if (selectExpressionsCollection == null) throw new ArgumentNullException(nameof(selectExpressionsCollection));
 
             try
@@ -36,8 +36,8 @@ namespace SolrNet.Linq.Impl
 
                 ISolrFieldParser fieldParser = oldParser.GetFieldRecursive<ISolrFieldParser>();
 
-                ISolrDocumentResponseParser<TNew> docParser = new SelectResponseParser2<TNew, TOld>(oldParser,
-                    new SolrDictionaryDocumentResponseParser(fieldParser), selectExpression,
+                ISolrDocumentResponseParser<TNew> docParser = new SelectResponseParser<TNew, TOld>(oldParser,
+                    new SolrDictionaryDocumentResponseParser(fieldParser), expression,
                     selectExpressionsCollection);
                                 
                 ISolrAbstractResponseParser<TNew> parser = new DefaultResponseParser<TNew>(docParser);
@@ -57,21 +57,7 @@ namespace SolrNet.Linq.Impl
                 throw new InvalidOperationException(
                     $"Unable to change solr query executer from {typeof(TOld)} to {typeof(TNew)}.", e);
             }
-        }
-
-        //internal static T GetSingleField<T>(this object instance)
-        //{
-        //    if (instance == null) throw new ArgumentNullException(nameof(instance));
-
-        //    BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
-        //                             | BindingFlags.Static;
-
-        //    Type type = instance.GetType();
-
-        //    FieldInfo field = type.GetFields(bindFlags).Single(info => info.FieldType == typeof(T));
-            
-        //    return (T)field.GetValue(instance);
-        //}
+        }       
 
         internal static T GetFieldRecursive<T>(this object instance, int limit = 5) where T:class 
         {
