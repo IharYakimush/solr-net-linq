@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Xml.Xsl;
 using SolrNet.Impl;
 using SolrNet.Impl.DocumentPropertyVisitors;
 using SolrNet.Impl.FieldParsers;
@@ -14,10 +16,13 @@ namespace SolrNet.Linq.Impl
 {
     internal static class ExecuterExtensions
     {
-        public static IExecuter<TNew> ChangeType<TNew, TOld>(this IExecuter<TOld> executer, MethodCallExpression selectExpression, SelectExpressionsCollection selectExpressionsCollection)
+        public static IExecuter<TNew> ChangeType<TNew, TOld>(
+            this IExecuter<TOld> executer, 
+            MethodCallExpression expression, 
+            SelectExpressionsCollection selectExpressionsCollection)
         {
             if (executer == null) throw new ArgumentNullException(nameof(executer));
-            if (selectExpression == null) throw new ArgumentNullException(nameof(selectExpression));
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
             if (selectExpressionsCollection == null) throw new ArgumentNullException(nameof(selectExpressionsCollection));
 
             try
@@ -32,10 +37,25 @@ namespace SolrNet.Linq.Impl
                     oldExecuter.GetFieldRecursive<ISolrDocumentResponseParser<TOld>>();
 
                 ISolrFieldParser fieldParser = oldParser.GetFieldRecursive<ISolrFieldParser>();
+                SolrDictionaryDocumentResponseParser dictionaryParser = new SolrDictionaryDocumentResponseParser(fieldParser);
 
-                ISolrDocumentResponseParser<TNew> docParser = new SelectResponseParser2<TNew, TOld>(oldParser,
-                    new SolrDictionaryDocumentResponseParser(fieldParser), selectExpression,
-                    selectExpressionsCollection);
+                ISolrDocumentResponseParser<TNew> docParser;
+
+                if (expression.Method.DeclaringType == typeof(Queryable) && expression.Method.Name == nameof(Queryable.Cast))
+                {
+                    docParser = new CastResponseParser<TNew, TOld>(oldParser, dictionaryParser);
+                }
+                else if (expression.Method.DeclaringType == typeof(Queryable) && expression.Method.Name == nameof(Queryable.Select))
+                {
+                    docParser = new SelectResponseParser<TNew, TOld>(oldParser,
+                        dictionaryParser, expression,
+                        selectExpressionsCollection);
+                }
+                else
+                {
+                    throw new InvalidOperationException(
+                        $"Unable to change query type from {typeof(TOld).Name} to {typeof(TNew).Name}. Method {expression.Method.Name} not supported");
+                }
                                 
                 ISolrAbstractResponseParser<TNew> parser = new DefaultResponseParser<TNew>(docParser);
 
@@ -54,21 +74,7 @@ namespace SolrNet.Linq.Impl
                 throw new InvalidOperationException(
                     $"Unable to change solr query executer from {typeof(TOld)} to {typeof(TNew)}.", e);
             }
-        }
-
-        //internal static T GetSingleField<T>(this object instance)
-        //{
-        //    if (instance == null) throw new ArgumentNullException(nameof(instance));
-
-        //    BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
-        //                             | BindingFlags.Static;
-
-        //    Type type = instance.GetType();
-
-        //    FieldInfo field = type.GetFields(bindFlags).Single(info => info.FieldType == typeof(T));
-            
-        //    return (T)field.GetValue(instance);
-        //}
+        }       
 
         internal static T GetFieldRecursive<T>(this object instance, int limit = 5) where T:class 
         {
@@ -77,8 +83,13 @@ namespace SolrNet.Linq.Impl
             BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
             Type type = instance.GetType();
-            FieldInfo[] fields = type.GetFields(bindFlags);
-            
+            List<FieldInfo> fields = new List<FieldInfo>();
+            fields.AddRange(type.GetFields(bindFlags));
+            while (type.BaseType != null && type.BaseType != typeof(object))
+            {
+                type = type.BaseType;
+                fields.AddRange(type.GetFields(bindFlags));
+            }
 
             foreach (FieldInfo field in fields
                 .OrderBy(info => typeof(T).IsAssignableFrom(info.FieldType) ? 0 : 1)
@@ -95,15 +106,28 @@ namespace SolrNet.Linq.Impl
                 {
                     if (limit > 0)
                     {
-                        if (fieldValue is IEnumerable enumerable)
+                        if (fieldValue is IEnumerable enumerable && !(fieldValue is IQueryable))
                         {
+                            int loopLimit = 1000;
                             foreach (object obj in enumerable)
                             {
+                                if (obj == null)
+                                {
+                                    continue;
+                                }
+
                                 T inner = obj.GetFieldRecursive<T>(limit - 1);
 
                                 if (inner != null)
                                 {
                                     return inner;
+                                }
+
+                                loopLimit--;
+
+                                if (loopLimit < 0)
+                                {
+                                    break;
                                 }
                             }
                         }

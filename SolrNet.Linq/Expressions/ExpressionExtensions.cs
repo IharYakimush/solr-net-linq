@@ -43,7 +43,7 @@ namespace SolrNet.Linq.Expressions
             
             if (expression is MemberExpression me)
             {
-                if (me.Member.DeclaringType == type)
+                if (me.Member.DeclaringType!= null && me.Member.DeclaringType.IsAssignableFrom(type))
                 {
                     return true;
                 }

@@ -9,7 +9,7 @@ namespace SolrNet.Linq.Expressions
     public static class SelectMethod
     {
         public const string Select = nameof(Queryable.Select);
-        public static bool TryVisitSelect(this MethodCallExpression node, SelectExpressionsCollection options, MemberContext context, out SelectContext newContext)
+        public static bool TryVisitSelect(this MethodCallExpression node, SelectExpressionsCollection options, MemberContext context, out MemberContext newContext)
         {
             newContext = null;
             bool result = node.Method.DeclaringType == typeof(Queryable) && node.Method.Name == Select;
@@ -31,6 +31,12 @@ namespace SolrNet.Linq.Expressions
                         newContext = new SelectContext(memberInit, context);
                     }
 
+                    if (lambda.Body is ParameterExpression)
+                    {
+                        newContext = context;
+                        return result;
+                    }
+
                     if (newContext != null)
                     {
                         options.Fields.Clear();
@@ -38,7 +44,7 @@ namespace SolrNet.Linq.Expressions
                         visitor.Visit(lambda.Body);                                                
 
                         return result;
-                    }
+                    }                    
                 }
 
                 throw new InvalidOperationException($"Unable to translate '{Select}' method.");

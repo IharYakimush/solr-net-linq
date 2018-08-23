@@ -33,6 +33,7 @@ namespace SolrNet.IntegrationOData.Controllers
                 "/api/values/1?$filter=Popularity eq null",
                 "/api/values/1?$filter=Categories/any(c: c eq 'electronics')",
                 "/api/values/2?$select=Id,Price,Categories",
+                "/api/values/3?$select=Id,Price,Categories",
             });
         }
 
@@ -66,6 +67,15 @@ namespace SolrNet.IntegrationOData.Controllers
         // GET api/values/5
         [HttpGet("2")]
         public ActionResult<string> Get2(ODataQueryOptions odata)
+        {
+            IQueryable<Product> query = this.Solr.AsQueryable();
+
+            return this.Ok(query.OData().ApplyQueryOptions(odata).ToJson());
+        }
+
+        // GET api/values/5
+        [HttpGet("3")]
+        public ActionResult<string> Get3(ODataQueryOptions odata)
         {
             IQueryable<Product> query = this.Solr.AsQueryable();
 

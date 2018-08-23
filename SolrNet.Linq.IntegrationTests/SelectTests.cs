@@ -139,6 +139,147 @@ namespace SolrNet.Linq.IntegrationTests
         }
 
         [Fact]
+        public void SelectDerivedWithCast()
+        {
+            IQueryable<DerivedProduct> derivedProducts = Product.SolrOperations.Value.AsQueryable()
+                .Where(p => p.Id != null && p.Categories.Any())
+                .Select(p => new DerivedProduct { Id2 = p.Id, Categories = p.Categories})
+                .Where(p => p.Id2 != null);
+
+            IQueryable<Product> q2 = derivedProducts.Cast<Product>();
+
+            var t1 = q2.ToSolrQueryResults();
+
+            Assert.NotNull(t1);
+            Assert.NotNull(t1[0].Categories);
+            Assert.Null(t1[0].Id);
+            Assert.True(t1.NumFound > 0);
+        }
+
+        [Fact]
+        public void SelectDerivedWithCastToInterface()
+        {
+            IQueryable<DerivedProduct> derivedProducts = Product.SolrOperations.Value.AsQueryable()
+                .Where(p => p.Id != null && p.Categories.Any())
+                .Select(p => new DerivedProduct { Id2 = p.Id, Categories = p.Categories })
+                .Where(p => p.Id2 != null);
+
+            IQueryable<IProduct> q2 = derivedProducts.Cast<IProduct>();
+
+            SolrQueryResults<IProduct> t1 = q2.ToSolrQueryResults();
+
+            Assert.NotNull(t1);
+            Assert.NotNull(t1[0].Categories);
+            Assert.Null(t1[0].Id);
+            Assert.True(t1.NumFound > 0);
+        }
+
+        [Fact]
+        public void SelectDerivedWithDoubleCast()
+        {
+            IQueryable<DerivedDerivedProduct> derivedProducts = Product.SolrOperations.Value.AsQueryable()
+                .Where(p => p.Id != null && p.Categories.Any())
+                .Select(p => new DerivedDerivedProduct { Id2 = p.Id, Id3 = p.Id, Categories = p.Categories })
+                .Where(p => p.Id3 != null);
+
+            IQueryable<Product> q2 = derivedProducts.Cast<DerivedProduct>().Cast<Product>();
+
+            var t1 = q2.ToSolrQueryResults();
+
+            Assert.NotNull(t1);
+            Assert.NotNull(t1[0].Categories);
+            Assert.Null(t1[0].Id);
+            Assert.True(t1.NumFound > 0);
+        }
+
+        [Fact]
+        public void FilterAfterCastNotWorking()
+        {
+            IQueryable<DerivedDerivedProduct> derivedProducts = Product.SolrOperations.Value.AsQueryable()
+                .Where(p => p.Id != null && p.Categories.Any())
+                .Select(p => new DerivedDerivedProduct { Id2 = p.Id, Id3 = p.Id, Categories = p.Categories })
+                .Where(p => p.Id3 != null);
+
+            IQueryable<Product> q2 = derivedProducts.Cast<Product>().Where(p => p.Id != null);
+
+            Assert.Throws<InvalidOperationException>(() => q2.ToSolrQueryResults());
+        }
+
+        [Fact]
+        public void CastToWrongTypeNotWorking()
+        {
+            IQueryable<DerivedProduct> derivedProducts = Product.SolrOperations.Value.AsQueryable()
+                .Where(p => p.Id != null && p.Categories.Any())
+                .Select(p => new DerivedProduct { Id2 = p.Id,  Categories = p.Categories })
+                .Where(p => p.Id2 != null);
+
+            var q2 = derivedProducts.Cast<DerivedDerivedProduct>();
+
+            Assert.Throws<InvalidCastException>(() => q2.ToSolrQueryResults());
+        }
+
+        [Fact]
+        public void MethodsWhichNotNeedContextWorksAfterCast()
+        {
+            IQueryable<DerivedDerivedProduct> derivedProducts = Product.SolrOperations.Value.AsQueryable()
+                .Where(p => p.Id != null && p.Categories.Any())
+                .Select(p => new DerivedDerivedProduct { Id2 = p.Id, Id3 = p.Id, Categories = p.Categories })
+                .Where(p => p.Id3 != null);
+
+            Product q2 = derivedProducts.Cast<Product>().Skip(1).Take(1).FirstOrDefault();
+
+            Assert.NotNull(q2);            
+        }
+
+        [Fact]
+        public void SelectMultipleCopiesOfField()
+        {
+            IQueryable<DerivedDerivedProduct> q1 = Product.SolrOperations.Value.AsQueryable()
+                .Where(p => p.Id != null && p.Categories.Any())
+                .Select(p => new DerivedDerivedProduct { Id2 = p.Id, Id3 = p.Id, Categories = p.Categories })
+                .Where(p => p.Id2 != null);
+
+            var t1 = q1.ToSolrQueryResults();
+
+            Assert.NotNull(t1);
+            Assert.NotNull(t1[0].Id2);
+            Assert.Equal(t1[0].Id2, t1[0].Id3);
+            Assert.NotNull(t1[0].Categories);
+            Assert.Null(t1[0].Id);
+            Assert.True(t1.NumFound > 0);
+        }
+
+        [Fact]
+        public void SelectAnyAfterSelect()
+        {
+            IQueryable<DerivedProduct> derivedProducts = Product.SolrOperations.Value.AsQueryable()
+                .Where(p => p.Id != null)
+                .Select(p => new DerivedProduct {Id2 = p.Id, Categories = p.Categories})
+                .Where(p => p.Id2 != null && p.Categories.Any());
+
+            IQueryable<Product> q2 = derivedProducts.Cast<Product>();
+
+            var t1 = q2.ToSolrQueryResults();
+
+            Assert.NotNull(t1);
+            Assert.NotNull(t1[0].Categories);
+            Assert.Null(t1[0].Id);
+            Assert.True(t1.NumFound > 0);
+        }
+
+        [Fact]
+        public void SelectSameParameter()
+        {
+            var t1 = Product.SolrOperations.Value.AsQueryable().Where(p => p.Id != null)
+                .Select(p => p).Where(p => p.Id != null)
+                .ToSolrQueryResults();
+
+            Assert.NotNull(t1);
+            Assert.NotNull(t1[0].Id);
+            Assert.True(t1.NumFound > 0);
+        }
+
+        [Fact]
         public void MultipleSelects()
         {
             var t1 = Product.SolrOperations.Value.AsQueryable(lo => lo.SetupQueryOptions = qo =>

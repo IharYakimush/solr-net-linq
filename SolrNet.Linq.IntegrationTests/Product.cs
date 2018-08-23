@@ -7,7 +7,12 @@ using SolrNet.Attributes;
 
 namespace SolrNet.Linq.IntegrationTests
 {
-    public class Product
+    public interface IProduct
+    {
+        string Id { get; set; }
+        ICollection<string> Categories { get; set; }
+    }
+    public class Product : IProduct
     {
         [DataMember]
         [SolrUniqueKey("id")]

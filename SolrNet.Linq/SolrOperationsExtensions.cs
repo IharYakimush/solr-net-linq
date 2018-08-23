@@ -20,7 +20,9 @@ namespace SolrNet.Linq
 
         public static SolrQueryResults<T> ToSolrQueryResults<T>(this IQueryable<T> queryable)
         {
-            return (SolrQueryResults<T>)queryable.Provider.Execute(queryable.Expression);
+            object execute = queryable.Provider.Execute(queryable.Expression);
+
+            return (SolrQueryResults<T>)execute;
         }
 
         public static Task<SolrQueryResults<T>> ToSolrQueryResultsAsync<T>(this IQueryable<T> queryable)

@@ -147,5 +147,13 @@ IQueryable<Product> solrLinq = solr.AsQueryable(setup =>
   - SingleAsync
   - SingleOrDefault
   - SingleOrDefaultAsync
+  ### Cast
+  Cast to interface and get SolrQueryResults object of interface type
+  ```
+  SolrQueryResults<IProduct> result = solrLinq
+	.Where(p => p.Id != null)
+    .Cast<IProduct>
+    .ToSolrQueryResults();
+  ```
 ## Nuget
 https://www.nuget.org/packages/SolrNet.Linq
