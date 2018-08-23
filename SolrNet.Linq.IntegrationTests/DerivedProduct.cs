@@ -4,4 +4,9 @@
     {
         public string Id2 { get; set; }
     }
+
+    public class DerivedDerivedProduct : DerivedProduct
+    {
+        public string Id3 { get; set; }
+    }
 }

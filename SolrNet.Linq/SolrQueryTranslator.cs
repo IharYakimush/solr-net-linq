@@ -59,7 +59,17 @@ namespace SolrNet.Linq
                 result = this.EnumeratedResult != EnumeratedResult.None;
             }
 
-            if (!result && !(node.Method.DeclaringType == typeof(Queryable) && node.Method.Name == nameof(Queryable.OfType)))
+            if (!result)
+            {
+                result = node.Method.DeclaringType == typeof(Queryable) && node.Method.Name == nameof(Queryable.Cast);
+            }
+
+            if (!result)
+            {
+                result = node.Method.DeclaringType == typeof(Queryable) && node.Method.Name == nameof(Queryable.OfType);
+            }
+
+            if (!result)
             {
                 throw new InvalidOperationException($"Method '{node.Method.Name}' not supported.");
             }

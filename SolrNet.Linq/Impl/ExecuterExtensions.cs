@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Xml.Xsl;
 using SolrNet.Impl;
 using SolrNet.Impl.DocumentPropertyVisitors;
 using SolrNet.Impl.FieldParsers;
@@ -35,10 +37,25 @@ namespace SolrNet.Linq.Impl
                     oldExecuter.GetFieldRecursive<ISolrDocumentResponseParser<TOld>>();
 
                 ISolrFieldParser fieldParser = oldParser.GetFieldRecursive<ISolrFieldParser>();
+                SolrDictionaryDocumentResponseParser dictionaryParser = new SolrDictionaryDocumentResponseParser(fieldParser);
 
-                ISolrDocumentResponseParser<TNew> docParser = new SelectResponseParser<TNew, TOld>(oldParser,
-                    new SolrDictionaryDocumentResponseParser(fieldParser), expression,
-                    selectExpressionsCollection);
+                ISolrDocumentResponseParser<TNew> docParser;
+
+                if (expression.Method.DeclaringType == typeof(Queryable) && expression.Method.Name == nameof(Queryable.Cast))
+                {
+                    docParser = new CastResponseParser<TNew, TOld>(oldParser, dictionaryParser);
+                }
+                else if (expression.Method.DeclaringType == typeof(Queryable) && expression.Method.Name == nameof(Queryable.Select))
+                {
+                    docParser = new SelectResponseParser<TNew, TOld>(oldParser,
+                        dictionaryParser, expression,
+                        selectExpressionsCollection);
+                }
+                else
+                {
+                    throw new InvalidOperationException(
+                        $"Unable to change query type from {typeof(TOld).Name} to {typeof(TNew).Name}. Method {expression.Method.Name} not supported");
+                }
                                 
                 ISolrAbstractResponseParser<TNew> parser = new DefaultResponseParser<TNew>(docParser);
 
@@ -66,8 +83,13 @@ namespace SolrNet.Linq.Impl
             BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
             Type type = instance.GetType();
-            FieldInfo[] fields = type.GetFields(bindFlags);
-            
+            List<FieldInfo> fields = new List<FieldInfo>();
+            fields.AddRange(type.GetFields(bindFlags));
+            while (type.BaseType != null && type.BaseType != typeof(object))
+            {
+                type = type.BaseType;
+                fields.AddRange(type.GetFields(bindFlags));
+            }
 
             foreach (FieldInfo field in fields
                 .OrderBy(info => typeof(T).IsAssignableFrom(info.FieldType) ? 0 : 1)
@@ -84,15 +106,28 @@ namespace SolrNet.Linq.Impl
                 {
                     if (limit > 0)
                     {
-                        if (fieldValue is IEnumerable enumerable)
+                        if (fieldValue is IEnumerable enumerable && !(fieldValue is IQueryable))
                         {
+                            int loopLimit = 1000;
                             foreach (object obj in enumerable)
                             {
+                                if (obj == null)
+                                {
+                                    continue;
+                                }
+
                                 T inner = obj.GetFieldRecursive<T>(limit - 1);
 
                                 if (inner != null)
                                 {
                                     return inner;
+                                }
+
+                                loopLimit--;
+
+                                if (loopLimit < 0)
+                                {
+                                    break;
                                 }
                             }
                         }
