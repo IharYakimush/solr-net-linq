@@ -158,5 +158,5 @@ IQueryable<Product> solrLinq = solr.AsQueryable(setup =>
 ## Nuget
 https://www.nuget.org/packages/SolrNet.Linq
 
-##Contribution
+## Contribution
 Please feel free to create issues and pool requests to develop branch
