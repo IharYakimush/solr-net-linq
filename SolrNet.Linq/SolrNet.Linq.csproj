@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net46</TargetFrameworks>
-    <SignAssembly>true</SignAssembly>
+    <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>sgn.snk</AssemblyOriginatorKeyFile>
     <Authors>IharYakimush</Authors>
     <Company />
@@ -12,11 +12,10 @@
     <PackageTags>solr solrnet linq</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>1.4.0</Version>
-    <PackageReleaseNotes>Improved support of Select() method. Compatible with OData way of building select expression.
-Added support for Cast&lt;T&gt;() method.</PackageReleaseNotes>
-    <AssemblyVersion>1.4.0.0</AssemblyVersion>
-    <FileVersion>1.4.0.0</FileVersion>
+    <Version>2.0.0</Version>
+    <PackageReleaseNotes>assembly unsigned</PackageReleaseNotes>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
