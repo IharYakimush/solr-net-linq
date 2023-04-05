@@ -144,12 +144,15 @@ namespace SolrNet.Linq
         }
 
         private static TResult CastResult<TResult>(object providerResult)
-        {
-            TResult result = default(TResult);
-
+        {            
             try
             {
-                result = (TResult) providerResult;
+                if (typeof(TResult) == typeof(int) && providerResult?.GetType() == typeof(long))
+                {
+                    return (TResult)Convert.ChangeType(providerResult, typeof(TResult));
+                }
+
+                return (TResult)providerResult;
             }
             catch (InvalidCastException exception)
             {
@@ -158,10 +161,9 @@ namespace SolrNet.Linq
                         "Query should return object of type '{0}'. Requested return type {1}.",
                         typeof(SolrQueryResults<>),
                         typeof(TResult));
+
                 throw new InvalidOperationException(message, exception);
             }
-
-            return result;
         }
     }
 }
