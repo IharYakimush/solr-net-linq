@@ -47,9 +47,9 @@ jobs:
     - name: Pack
       run: dotnet pack -c Release -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -p:VersionPrefix=${{ github.run_number }} -o \nupkg
       if: github.ref == 'refs/heads/master'
-    #- name: Push Rc
-    #  run: dotnet nuget push \nupkgrc/*.nupkg -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json
-    #  if: github.ref == 'refs/heads/develop'
-    #- name: Push
-    #  run: dotnet nuget push \nupkg/*.nupkg -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json
-    #  if: github.ref == 'refs/heads/master'
+    - name: Push Rc
+      run: dotnet nuget push \nupkgrc/*.nupkg -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json
+      if: github.ref == 'refs/heads/develop'
+    - name: Push
+      run: dotnet nuget push \nupkg/*.nupkg -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json
+      if: github.ref == 'refs/heads/master'

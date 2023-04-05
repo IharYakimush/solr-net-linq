@@ -16,22 +16,6 @@ namespace SolrNet.Linq.Tests
 {
     public class EnumeratedTests
     {
-        //[Fact]
-        //public async Task OrDefaultAsync()
-        //{
-            
-
-        //    Product t1 = await q.FirstOrDefaultAsync(p => p.Id == "qwe");
-        //    Product t2 = await q.Where(p => p.Id == "qwe").FirstOrDefaultAsync();
-        //    Product t3 = await q.SingleOrDefaultAsync(p => p.Id == "qwe");
-        //    Product t4 = await q.Where(p => p.Id == "qwe").SingleOrDefaultAsync();
-
-        //    Assert.Null(t1);
-        //    Assert.Null(t2);
-        //    Assert.Null(t3);
-        //    Assert.Null(t4);
-        //}
-
         private static IQueryable<Product> GetQueryWithResult(int count)
         {
             SolrNetLinqOptions options = new SolrNetLinqOptions();
