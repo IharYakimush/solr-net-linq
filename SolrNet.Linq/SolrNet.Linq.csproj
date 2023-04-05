@@ -12,7 +12,7 @@
     <PackageTags>solr solrnet linq</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>SolrNet.Core version updated to 1.1.1</PackageReleaseNotes>
+    <PackageReleaseNotes>SolrNet.Core version updated to 1.1.1. Support for net6.0</PackageReleaseNotes>
 	<VersionPrefix>0</VersionPrefix>
 	<Version>2.111.$(VersionPrefix)</Version>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
