@@ -1,2 +1,2 @@
 dotnet build SolrNet.Linq.sln -c Release
-dotnet test -f netcoreapp2.1 SolrNet.Linq.Tests/SolrNet.Linq.Tests.csproj 
+dotnet test -f net6.0 SolrNet.Linq.Tests/SolrNet.Linq.Tests.csproj 

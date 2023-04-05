@@ -1,0 +1,55 @@
+name: .NET
+
+on:
+  push:
+    branches: [ develop, master ]
+  pull_request:
+    branches: [ develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:    
+    - name: Set Timezone
+      uses: szenius/set-timezone@v1.0
+      with:
+        timezoneLinux: "Asia/Singapore"
+        timezoneMacos: "Asia/Singapore"
+        timezoneWindows: "Singapore Standard Time"
+    - uses: actions/checkout@v3
+    - name: Setup net6.0
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build 6
+      run: dotnet build --no-restore --configuration Debug
+    - name: Test 6
+      run: dotnet test SolrNet.Linq.Tests --no-build --verbosity normal --configuration Debug
+  nuget:
+    runs-on: ubuntu-latest    
+    if: ${{ github.event_name != 'pull_request' }}
+    needs: build
+    steps:        
+    - uses: actions/checkout@v3
+    - name: Setup net6.0
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore --configuration Release    
+    - name: Pack Rc
+      run: dotnet pack -c Release -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -p:VersionPrefix=${{ github.run_number }}-rc -o \nupkgrc
+      if: github.ref == 'refs/heads/develop'
+    - name: Pack
+      run: dotnet pack -c Release -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -p:VersionPrefix=${{ github.run_number }} -o \nupkg
+      if: github.ref == 'refs/heads/master'
+    - name: Push Rc
+      run: dotnet nuget push \nupkgrc/*.nupkg -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json
+      if: github.ref == 'refs/heads/develop'
+    - name: Push
+      run: dotnet nuget push \nupkg/*.nupkg -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json
+      if: github.ref == 'refs/heads/master'

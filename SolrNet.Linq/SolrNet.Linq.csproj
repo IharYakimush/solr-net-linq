@@ -12,15 +12,14 @@
     <PackageTags>solr solrnet linq</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>2.19.0</Version>
-    <PackageReleaseNotes>SolrNet.Core version updated to 1.0.19</PackageReleaseNotes>
-    <AssemblyVersion>2.19.0.0</AssemblyVersion>
-    <FileVersion>2.19.0.0</FileVersion>
+    <PackageReleaseNotes>SolrNet.Core version updated to 1.1.1. Support for net6.0</PackageReleaseNotes>
+	<VersionPrefix>0</VersionPrefix>
+	<Version>2.111.$(VersionPrefix)</Version>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SolrNet.Core" Version="1.0.19" />
+    <PackageReference Include="SolrNet.Core" Version="1.1.1" />
   </ItemGroup>
 
   <ItemGroup>

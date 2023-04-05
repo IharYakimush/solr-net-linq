@@ -3,8 +3,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
+
 using SolrNet.Linq.Impl;
-using SolrNet.Mapping.Validation;
 
 namespace SolrNet.Linq
 {
@@ -205,8 +205,16 @@ namespace SolrNet.Linq
             foreach (MethodInfo candidate in candidates)
             {
                 var genericArguments = candidate.GetGenericArguments();
-                if (genericArguments.Length == 1 && candidate.GetParameters().Length == paramsCount)
+                ParameterInfo[] parameterInfos = candidate.GetParameters();
+
+                if (genericArguments.Length == 1 && parameterInfos.Length == paramsCount)
                 {
+                    // skip new methods from net6.0
+                    if (paramsCount == 2 && !typeof(Expression).IsAssignableFrom(parameterInfos.Last().ParameterType))
+                    {
+                        continue;
+                    }
+
                     return candidate.MakeGenericMethod(typeof(T));
                 }
             }
